@@ -3,7 +3,7 @@ import "@hotwired/turbo-rails"
 import "controllers"
 
 // Wins Sidebar Functionality
-document.addEventListener('DOMContentLoaded', function() {
+function initializeWinsSidebar() {
   const winsSidebar = document.getElementById('winsSidebar');
   const winsToggle = document.getElementById('winsToggle');
   const winsClose = document.getElementById('winsClose');
@@ -107,4 +107,8 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Load wins on page load
   loadWins();
-});
+}
+
+// Initialize wins sidebar on DOMContentLoaded and Turbo navigation
+document.addEventListener('DOMContentLoaded', initializeWinsSidebar);
+document.addEventListener('turbo:load', initializeWinsSidebar);

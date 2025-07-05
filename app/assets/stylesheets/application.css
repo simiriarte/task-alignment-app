@@ -986,7 +986,6 @@ a:hover {
   border-right: none;
   z-index: 1001;
   animation: wins-pulse 4s ease-in-out infinite;
-  clip-path: polygon(0 15%, 100% 0%, 100% 100%, 0 85%);
 }
 
 .wins-toggle:hover {
