@@ -2,6 +2,49 @@
 import "@hotwired/turbo-rails"
 import "controllers"
 
+// Accordion Functionality - More robust implementation
+function initializeAccordion() {
+  console.log('Initializing accordion...');
+  
+  // Wait a bit for DOM to be ready
+  setTimeout(() => {
+    const accordionTriggers = document.querySelectorAll('[data-accordion-trigger]');
+    console.log('Found accordion triggers:', accordionTriggers.length);
+    
+    if (accordionTriggers.length === 0) {
+      console.log('No accordion triggers found');
+      return;
+    }
+    
+    accordionTriggers.forEach((trigger, index) => {
+      console.log(`Adding event listener to trigger ${index}`);
+      
+      trigger.addEventListener('click', function(e) {
+        console.log('Accordion trigger clicked!');
+        e.preventDefault();
+        
+        const accordionItem = this.closest('.accordion-item');
+        const isExpanded = accordionItem.classList.contains('expanded');
+        
+        console.log('Current item expanded:', isExpanded);
+        
+        // Close all accordion items
+        document.querySelectorAll('.accordion-item').forEach(item => {
+          item.classList.remove('expanded');
+        });
+        
+        // Open clicked item if it wasn't already open
+        if (!isExpanded) {
+          accordionItem.classList.add('expanded');
+          console.log('Expanding item');
+        } else {
+          console.log('Collapsing item');
+        }
+      });
+    });
+  }, 100);
+}
+
 // Wins Sidebar Functionality
 function initializeWinsSidebar() {
   const winsSidebar = document.getElementById('winsSidebar');
@@ -109,6 +152,13 @@ function initializeWinsSidebar() {
   loadWins();
 }
 
-// Initialize wins sidebar on DOMContentLoaded and Turbo navigation
-document.addEventListener('DOMContentLoaded', initializeWinsSidebar);
-document.addEventListener('turbo:load', initializeWinsSidebar);
+// Initialize all functionality on DOMContentLoaded and Turbo navigation
+document.addEventListener('DOMContentLoaded', function() {
+  initializeAccordion();
+  initializeWinsSidebar();
+});
+
+document.addEventListener('turbo:load', function() {
+  initializeAccordion();
+  initializeWinsSidebar();
+});

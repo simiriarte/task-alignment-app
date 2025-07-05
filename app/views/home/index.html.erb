@@ -26,7 +26,7 @@
         <%= link_to "#" do %>
           <span class="nav-icon">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008ZM14.25 15h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008ZM16.5 15h.008v.008H16.5V15Zm0 2.25h.008v.008H16.5v-.008Z"/>
+              <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
             </svg>
           </span>
           <span class="nav-label">Calendar</span>
@@ -70,44 +70,235 @@
 
 <!-- Main Content Area -->
 <div class="main-content">
-  <div class="container">
+  <div class="dashboard-welcome">
     <% if user_signed_in? %>
-      <!-- Calendar Placeholder -->
-      <div class="calendar-placeholder">
-        <h3>
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008ZM14.25 15h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008ZM16.5 15h.008v.008H16.5V15Zm0 2.25h.008v.008H16.5v-.008Z"/>
-          </svg>
-          Weekly Calendar View
-        </h3>
-        <p>Coming soon - This space will show your weekly calendar and upcoming tasks</p>
+      <!-- Welcome Section -->
+      <div class="welcome-section">
+        <h1 class="welcome-title">Welcome to Task Alignment</h1>
+        <p class="welcome-description">
+          Task Alignment helps you align your daily actions with your deeper values and goals, creating a holistic approach to getting things done. Move beyond simple to-do lists to experience productivity with meaning and personal fulfillment.
+        </p>
       </div>
-    <% end %>
-    
-    <h1>Welcome to Task Alignment App</h1>
-    <p>Your personal alignment and task management application.</p>
 
-    <div class="auth-links">
-      <% if user_signed_in? %>
-        <p>Welcome to your dashboard!</p>
-      <% else %>
-        <p>Please sign in to access your tasks and alignment tools.</p>
-        <%= link_to "Sign Up", new_user_registration_path, class: "btn btn-primary" %>
-        <%= link_to "Sign In", new_user_session_path, class: "btn btn-outline" %>
-      <% end %>
-    </div>
+      <!-- Action Section -->
+      <div class="action-section">
+        <%= link_to "Create Your First Task", tasks_path, class: "btn btn-primary btn-large btn-rounded" %>
+      </div>
 
-    <% if user_signed_in? %>
-      <div class="features">
-        <h2>Coming Soon</h2>
-        <ul>
-          <li>Task management with priority levels</li>
-          <li>Cognitive density scoring</li>
-          <li>Duration estimation</li>
-          <li>Focus area organization</li>
-          <li>Astrology integration</li>
-        </ul>
+      <!-- Coming Soon Features -->
+      <div class="coming-soon-section">
+        <div class="coming-soon-accordion">
+          <div class="accordion-header">
+            <h2 class="accordion-title">Coming Soon</h2>
+          </div>
+          
+          <div class="accordion-content">
+            <div class="accordion-item">
+              <div class="accordion-item-header" data-accordion-trigger>
+                <div class="accordion-item-left">
+                  <div class="accordion-item-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <span class="accordion-item-title">Task Alignment</span>
+                </div>
+                <div class="accordion-item-right">
+                  <span class="status-indicator status-in-progress">In Progress</span>
+                  <div class="accordion-chevron">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item-content">
+                <p>Smart prioritization based on your values and energy</p>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <div class="accordion-item-header" data-accordion-trigger>
+                <div class="accordion-item-left">
+                  <div class="accordion-item-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+                    </svg>
+                  </div>
+                  <span class="accordion-item-title">Calendar Integration</span>
+                </div>
+                <div class="accordion-item-right">
+                  <div class="accordion-chevron">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item-content">
+                <p>Unified view of tasks and events with smart scheduling</p>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <div class="accordion-item-header" data-accordion-trigger>
+                <div class="accordion-item-left">
+                  <div class="accordion-item-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                  </div>
+                  <span class="accordion-item-title">Astrology Integration</span>
+                </div>
+                <div class="accordion-item-right">
+                  <div class="accordion-chevron">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item-content">
+                <p>Cosmic timing for optimal productivity and alignment</p>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <div class="accordion-item-header" data-accordion-trigger>
+                <div class="accordion-item-left">
+                  <div class="accordion-item-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 4.5v15m7.5-7.5h-15"/>
+                    </svg>
+                  </div>
+                  <span class="accordion-item-title">Quick Capture</span>
+                </div>
+                <div class="accordion-item-right">
+                  <div class="accordion-chevron">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item-content">
+                <p>Instant task capture on mobile and desktop</p>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <div class="accordion-item-header" data-accordion-trigger>
+                <div class="accordion-item-left">
+                  <div class="accordion-item-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                    </svg>
+                  </div>
+                  <span class="accordion-item-title">Life Audit</span>
+                </div>
+                <div class="accordion-item-right">
+                  <div class="accordion-chevron">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item-content">
+                <p>Set your baseline and track progress on personal growth and alignment</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <% else %>
+      <!-- Non-signed-in welcome -->
+      <div class="welcome-section">
+        <h1 class="welcome-title">Welcome to Task Alignment</h1>
+        <p class="welcome-description">
+          Task Alignment helps you align your daily actions with your deeper values and goals, creating a holistic approach to getting things done.
+        </p>
+      </div>
+
+      <div class="auth-actions">
+        <%= link_to "Sign Up", new_user_registration_path, class: "btn btn-primary btn-large" %>
+        <%= link_to "Sign In", new_user_session_path, class: "btn btn-outline btn-large" %>
       </div>
     <% end %>
   </div>
 </div>
+
+<script>
+  // Direct accordion functionality to ensure it works
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up accordion...');
+    
+    // Wait a bit for everything to be ready
+    setTimeout(function() {
+      const accordionTriggers = document.querySelectorAll('[data-accordion-trigger]');
+      console.log('Found accordion triggers:', accordionTriggers.length);
+      
+      accordionTriggers.forEach(function(trigger, index) {
+        console.log('Setting up trigger', index);
+        
+        trigger.addEventListener('click', function(e) {
+          console.log('Accordion clicked!');
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const accordionItem = this.closest('.accordion-item');
+          const isExpanded = accordionItem.classList.contains('expanded');
+          
+          console.log('Item expanded:', isExpanded);
+          
+          // Close all accordion items first
+          document.querySelectorAll('.accordion-item').forEach(function(item) {
+            item.classList.remove('expanded');
+          });
+          
+          // Open clicked item if it wasn't already open
+          if (!isExpanded) {
+            accordionItem.classList.add('expanded');
+            console.log('Expanding item');
+          }
+        });
+      });
+    }, 200);
+  });
+  
+  // Also try on turbo:load for Rails
+  document.addEventListener('turbo:load', function() {
+    console.log('Turbo loaded, setting up accordion...');
+    
+    setTimeout(function() {
+      const accordionTriggers = document.querySelectorAll('[data-accordion-trigger]');
+      console.log('Found accordion triggers (turbo):', accordionTriggers.length);
+      
+      accordionTriggers.forEach(function(trigger, index) {
+        // Remove existing listeners to prevent duplicates
+        const newTrigger = trigger.cloneNode(true);
+        trigger.parentNode.replaceChild(newTrigger, trigger);
+        
+        newTrigger.addEventListener('click', function(e) {
+          console.log('Accordion clicked (turbo)!');
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const accordionItem = this.closest('.accordion-item');
+          const isExpanded = accordionItem.classList.contains('expanded');
+          
+          // Close all accordion items first
+          document.querySelectorAll('.accordion-item').forEach(function(item) {
+            item.classList.remove('expanded');
+          });
+          
+          // Open clicked item if it wasn't already open
+          if (!isExpanded) {
+            accordionItem.classList.add('expanded');
+          }
+        });
+      });
+    }, 200);
+  });
+</script>
