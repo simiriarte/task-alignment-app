@@ -47,15 +47,18 @@
     <% if user_signed_in? %>
       <div class="nav-profile">
         <div class="profile-trigger">
-          <svg class="profile-avatar" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-          </svg>
+          <% if current_user.profile_photo.present? %>
+            <img src="<%= current_user.profile_photo %>" alt="Profile Photo" class="profile-photo">
+          <% else %>
+            <svg class="profile-avatar" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+            </svg>
+          <% end %>
         </div>
         <div class="profile-menu">
-          <div class="profile-divider"></div>
-          <%= link_to "#", class: "profile-menu-item" do %>
+          <a href="#" class="profile-menu-item" id="profileMenuTrigger">
             <span class="profile-menu-label">Profile</span>
-          <% end %>
+          </a>
           <%= link_to "#", class: "profile-menu-item" do %>
             <span class="profile-menu-label">Settings</span>
           <% end %>
@@ -256,3 +259,41 @@
      </div>
    </div>
  </div>
+
+<!-- Profile Photo Modal -->
+<div class="profile-modal" id="profileModal">
+  <div class="profile-modal-header">
+    <h3 class="profile-modal-title">Profile Photo</h3>
+    <button class="profile-modal-close" id="profileModalClose">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+  <div class="profile-modal-content">
+    <div class="profile-photo-preview" id="profilePhotoPreview">
+      <% if current_user.profile_photo.present? %>
+        <img src="<%= current_user.profile_photo %>" alt="Profile Photo" id="profilePhotoImg">
+      <% else %>
+        <svg class="profile-photo-preview-placeholder" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+        </svg>
+      <% end %>
+    </div>
+    <div class="profile-photo-upload">
+      <input type="file" class="profile-photo-input" id="profilePhotoInput" accept="image/*">
+      <button class="profile-photo-button" id="profilePhotoButton">
+        Choose Photo
+      </button>
+      <% if current_user.profile_photo.present? %>
+        <button class="profile-photo-button secondary" id="removePhotoButton">
+          Remove Photo
+        </button>
+      <% end %>
+    </div>
+    <div class="profile-modal-actions">
+      <button class="btn-cancel" id="profileModalCancel">Cancel</button>
+      <button class="btn-save" id="profileModalSave" disabled>Save</button>
+    </div>
+  </div>
+</div>

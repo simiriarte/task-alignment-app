@@ -538,6 +538,8 @@ a:hover {
   cursor: pointer;
   transition: all 0.2s ease;
   margin: 20px auto 0;
+  position: relative;
+  overflow: hidden;
 }
 
 .profile-trigger:hover {
@@ -553,25 +555,26 @@ a:hover {
   fill: none;
 }
 
+.profile-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .profile-menu {
   padding-top: 12px;
   opacity: 0;
   visibility: hidden;
   max-height: 0;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.6s ease;
 }
 
 .nav-profile:hover .profile-menu {
   opacity: 1;
   visibility: visible;
   max-height: 200px;
-}
-
-.profile-divider {
-  height: 1px;
-  background: #4a4051;
-  margin: 8px 20px 12px;
 }
 
 .profile-menu-item {
@@ -594,7 +597,7 @@ a:hover {
 .profile-menu-label {
   margin-left: 15px;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.6s ease;
 }
 
 .dashboard-nav:hover .profile-menu-label {
@@ -1776,4 +1779,185 @@ a:hover {
   min-height: 100vh;
   box-sizing: border-box;
   overflow-x: hidden;
+}
+
+/* Profile Photo Modal */
+.profile-modal {
+  position: fixed;
+  bottom: 20px;
+  left: 90px;
+  width: 320px;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1100;
+  display: none;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-modal.show {
+  display: block;
+}
+
+.profile-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.profile-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.profile-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.profile-modal-close:hover {
+  background: var(--border-light);
+}
+
+.profile-modal-close svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--text-secondary);
+  stroke-width: 2;
+}
+
+.profile-modal-content {
+  padding: 20px;
+}
+
+.profile-photo-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--border-light);
+  margin: 0 auto 20px;
+  overflow: hidden;
+  border: 3px solid var(--border-color);
+}
+
+.profile-photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-photo-preview-placeholder {
+  width: 40px;
+  height: 40px;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.profile-photo-upload {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.profile-photo-input {
+  display: none;
+}
+
+.profile-photo-button {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.profile-photo-button:hover {
+  background: #3182ce;
+}
+
+.profile-photo-button.secondary {
+  background: var(--border-light);
+  color: var(--text-secondary);
+  margin-left: 8px;
+}
+
+.profile-photo-button.secondary:hover {
+  background: var(--border-color);
+}
+
+.profile-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.profile-modal-actions button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.profile-modal-actions .btn-cancel {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.profile-modal-actions .btn-cancel:hover {
+  background: var(--border-light);
+}
+
+.profile-modal-actions .btn-save {
+  background: var(--accent-color);
+  color: white;
+}
+
+.profile-modal-actions .btn-save:hover {
+  background: #3182ce;
+}
+
+.profile-modal-actions .btn-save:disabled {
+  background: var(--text-muted);
+  cursor: not-allowed;
+}
+
+/* Mobile responsiveness for profile modal */
+@media (max-width: 768px) {
+  .profile-modal {
+    left: 70px;
+    width: 280px;
+  }
 }
