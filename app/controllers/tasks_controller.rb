@@ -17,6 +17,7 @@ class TasksController < ApplicationController
     @rated_count = current_user.tasks.where(status: 'rated').count
     @parked_count = current_user.tasks.where(status: 'parked').count
     @completed_count = current_user.tasks.where(status: 'completed').count
+    @total_tasks = current_user.tasks.count
   end
 
   # GET /tasks/1
