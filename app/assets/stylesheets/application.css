@@ -607,7 +607,7 @@ a:hover {
   margin-left: 70px; /* Account for left sidebar width */
   margin-right: 50px; /* Minimal right margin for breathing room */
   padding: 0 24px; /* Add padding for breathing room */
-  transition: margin-left 0.3s ease;
+  transition: margin-left 0.3s ease, margin-right 0.3s ease, width 0.3s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -828,6 +828,26 @@ a:hover {
   .main-content .container {
     max-width: 1620px;
   }
+  
+  /* Wins sidebar responsive */
+  .wins-sidebar {
+    width: 0;
+  }
+  
+  .wins-toggle {
+    width: 42px;
+    height: 80px;
+  }
+  
+  .wins-toggle svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .main-content.wins-open {
+    margin-right: 280px;
+    width: calc(100vw - 400px);
+  }
 }
 
 /* Responsive Design */
@@ -898,12 +918,292 @@ a:hover {
     width: 28px;
     height: 28px;
   }
+  
+  /* Wins sidebar responsive */
+  .wins-sidebar {
+    width: 0;
+  }
+  
+  .wins-sidebar.open {
+    width: 250px;
+  }
+  
+  .wins-toggle {
+    width: 38px;
+    height: 70px;
+  }
+  
+  .wins-toggle svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .main-content.wins-open {
+    margin-right: 250px;
+    width: calc(100vw - 310px);
+  }
+}
+
+/* Wins Sidebar */
+.wins-sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  width: 0;
+  background: var(--surface-color);
+  box-shadow: -3px 0 12px rgba(0, 0, 0, 0.08);
+  transition: width 0.3s ease;
+  z-index: 1000;
+  overflow: hidden;
+  border-left: 1px solid var(--border-color);
+}
+
+.wins-sidebar.open {
+  width: 280px;
+}
+
+.wins-sidebar.open .wins-toggle {
+  display: none;
+}
+
+.wins-toggle {
+  position: fixed;
+  top: 33.33%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 45px;
+  height: 90px;
+  background: var(--surface-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 12px 0 0 12px;
+  box-shadow: -2px 0 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+  border-right: none;
+  z-index: 1001;
+  animation: wins-pulse 4s ease-in-out infinite;
+  clip-path: polygon(0 15%, 100% 0%, 100% 100%, 0 85%);
+}
+
+.wins-toggle:hover {
+  background: #f9fafb;
+  transform: translateY(-50%) translateX(-2px);
+  box-shadow: -3px 0 8px rgba(0, 0, 0, 0.12);
+  animation: none;
+}
+
+.wins-toggle svg {
+  width: 22px;
+  height: 22px;
+  fill: #fbbf24;
+  stroke: none;
+}
+
+/* Gentle pulse animation to indicate interactivity */
+@keyframes wins-pulse {
+  0%, 100% { transform: translateY(-50%) scale(1); }
+  50% { transform: translateY(-50%) scale(1.02); }
+}
+
+.wins-content {
+  padding: 20px 0 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.wins-sidebar.open .wins-content {
+  opacity: 1;
+  visibility: visible;
+}
+
+.wins-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.wins-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.wins-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.wins-close:hover {
+  background: var(--border-light);
+}
+
+.wins-close svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--text-secondary);
+  stroke-width: 2;
+}
+
+.wins-input-container {
+  padding: 20px;
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid var(--border-color);
+  margin-top: auto;
+}
+
+.wins-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--surface-color);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.wins-input::placeholder {
+  color: var(--text-muted);
+}
+
+.wins-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  background: var(--surface-color);
+}
+
+.wins-add-btn {
+  background: var(--accent-color);
+  border: none;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wins-add-btn:hover {
+  background: #3182ce;
+}
+
+.wins-add-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: white;
+  stroke-width: 2;
+}
+
+.wins-list {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.wins-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-light);
+  position: relative;
+}
+
+.wins-item:last-child {
+  border-bottom: none;
+}
+
+.wins-item:hover .wins-delete {
+  opacity: 0.6;
+  visibility: visible;
+}
+
+.wins-item:hover {
+  background-color: rgba(249, 250, 251, 0.8);
+  border-radius: 6px;
+  margin: 0 -8px;
+  padding: 12px 8px;
+  transition: all 0.2s ease;
+}
+
+.wins-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.wins-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: #fbbf24;
+}
+
+.wins-text {
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 400;
+  flex: 1;
+}
+
+.wins-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.wins-delete:hover {
+  background: rgba(156, 163, 175, 0.15);
+}
+
+.wins-delete svg {
+  width: 10px;
+  height: 10px;
+  stroke: #9ca3af;
+  stroke-width: 1.5;
+}
+
+/* Adjust main content when wins sidebar is open */
+.main-content.wins-open {
+  margin-right: 280px;
+  width: calc(100vw - 350px);
 }
 
 /* Large screen optimization */
 @media (min-width: 1400px) {
   .main-content {
     margin-right: 50px; /* Minimal right margin for bigger screens */
+  }
+  
+  .main-content.wins-open {
+    margin-right: 280px;
   }
   
   .dashboard-container {
