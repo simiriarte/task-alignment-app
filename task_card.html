@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Card - Phase 1</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .task-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            width: 700px;
+            margin: 0 auto;
+            position: relative;
+            border-left: 4px solid #9ca3af;
+            display: grid;
+            grid-template-columns: 140px 1fr 1fr 1fr;
+            gap: 8px;
+        }
+
+        .task-header {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .task-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 18px;
+            height: 18px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            color: #333;
+        }
+
+        .copy-icon::after {
+            content: "📄";
+            font-size: 14px;
+        }
+
+        .close-icon::after {
+            content: "×";
+            font-size: 14px;
+            font-weight: 300;
+        }
+
+        .input-row {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 140px 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .date-input {
+            grid-column: 1;
+            position: relative;
+        }
+
+        .date-input input {
+            width: 100%;
+            padding: 10px 32px 10px 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #666;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        .date-input::after {
+            content: "📅";
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+        }
+
+        .rating-input {
+            position: relative;
+        }
+
+        .rating-input:nth-child(2) {
+            grid-column: 2;
+        }
+
+        .rating-input:nth-child(3) {
+            grid-column: 3;
+        }
+
+        .rating-input:nth-child(4) {
+            grid-column: 4;
+        }
+
+        .rating-input input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #333;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        .rating-input input::placeholder {
+            color: #666;
+        }
+
+        .bottom-section {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 140px 1fr 1fr 1fr;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .left-controls {
+            grid-column: 1 / 4;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .completion-circle {
+            width: 18px;
+            height: 18px;
+            border: 1px solid #e1e5e9;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+
+        .divider {
+            width: 1px;
+            height: 16px;
+            background: #e1e5e9;
+            margin: 0 2px;
+        }
+
+        .time-section {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .time-buttons {
+            display: flex;
+            gap: 3px;
+        }
+
+        .time-btn {
+            width: 22px;
+            height: 22px;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #666;
+            transition: all 0.2s ease;
+        }
+
+        .time-btn:hover {
+            border-color: #b8c4ce;
+            background: #f8f9fa;
+        }
+
+        .est-hours-label {
+            font-size: 12px;
+            color: #666;
+            margin-left: 4px;
+        }
+
+        .focus-task {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .focus-checkbox {
+            width: 14px;
+            height: 14px;
+            border: 1px solid #e1e5e9;
+            border-radius: 3px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .right-actions {
+            grid-column: 4;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .action-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 50%;
+            background: #e5e7eb;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #6b7280;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: #d1d5db;
+        }
+
+        .add-btn::after {
+            content: "+";
+            font-weight: 200;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .expand-btn {
+            position: relative;
+        }
+
+        .expand-btn::after {
+            content: "‹";
+            font-size: 10px;
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-50%) rotate(270deg);
+        }
+
+        .expand-btn::before {
+            content: "‹";
+            font-size: 10px;
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-50%) rotate(270deg);
+        }
+
+        .park-btn::after {
+            content: "P";
+            font-weight: 200;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 12px;
+        }
+
+        .forward-btn::after {
+            content: "›";
+            font-size: 14px;
+            font-weight: 200;
+        }
+    </style>
+</head>
+<body>
+    <div class="task-card">
+        <!-- Header -->
+        <div class="task-header">
+            <h3 class="task-title">Sample Task Model</h3>
+            <div class="header-actions">
+                <button class="icon-btn copy-icon"></button>
+                <button class="icon-btn close-icon"></button>
+            </div>
+        </div>
+
+        <!-- Input row -->
+        <div class="input-row">
+            <div class="date-input">
+                <input type="text" placeholder="due: MM/DD" readonly>
+            </div>
+            <div class="rating-input">
+                <input type="text" placeholder="energy" readonly>
+            </div>
+            <div class="rating-input">
+                <input type="text" placeholder="simplicity" readonly>
+            </div>
+            <div class="rating-input">
+                <input type="text" placeholder="impact" readonly>
+            </div>
+        </div>
+
+        <!-- Bottom section -->
+        <div class="bottom-section">
+            <div class="left-controls">
+                <div class="completion-circle"></div>
+                <div class="divider"></div>
+                
+                <div class="time-section">
+                    <div class="time-buttons">
+                        <button class="time-btn">1</button>
+                        <button class="time-btn">2</button>
+                        <button class="time-btn">3</button>
+                        <button class="time-btn">4</button>
+                        <button class="time-btn">5</button>
+                        <button class="time-btn">6</button>
+                        <button class="time-btn">7</button>
+                        <button class="time-btn">8</button>
+                    </div>
+                    <span class="est-hours-label">est hrs</span>
+                </div>
+
+                <div class="focus-task">
+                    <div class="focus-checkbox"></div>
+                    <span>focus task</span>
+                </div>
+            </div>
+
+            <div class="right-actions">
+                <button class="action-btn add-btn"></button>
+                <button class="action-btn expand-btn"></button>
+                <button class="action-btn park-btn"></button>
+                <button class="action-btn forward-btn"></button>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

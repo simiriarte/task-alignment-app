@@ -23,6 +23,9 @@ gem "bcrypt", "~> 3.1.7"
 # Use Devise for authentication [https://github.com/heartcombo/devise]
 gem "devise"
 
+# Heroicons for beautiful SVG icons [https://github.com/jclusso/heroicons]
+gem "heroicons"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 

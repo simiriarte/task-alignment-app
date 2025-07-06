@@ -1,7 +1,9 @@
 <div class="container">
   <div class="page-header">
     <h1>New Task</h1>
-    <%= link_to "Back to Tasks", tasks_path, class: "btn btn-outline" %>
+    <%= link_to tasks_path, class: "btn btn-outline" do %>
+      <%= chevron_left_icon %> Back to Tasks
+    <% end %>
   </div>
 
   <div class="form-container">
@@ -33,7 +35,7 @@
       </div>
 
       <div class="actions">
-        <%= form.submit "Create Task" %>
+        <%= form.submit "Create Task", class: "btn btn-primary icon-with-text" %>
       </div>
     <% end %>
   </div>
