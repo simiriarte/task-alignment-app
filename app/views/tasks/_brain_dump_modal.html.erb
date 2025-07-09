@@ -1,0 +1,58 @@
+<!-- Brain Dump Modal -->
+<div data-controller="brain-dump" 
+     data-brain-dump-url-value="<%= brain_dump_tasks_path %>"
+     data-action="keydown@window->brain-dump#handleKeydown">
+  
+  <div class="profile-modal" 
+       data-brain-dump-target="modal"
+       data-action="click->brain-dump#handleBackdropClick">
+    <div class="profile-modal-header">
+      <h3 class="profile-modal-title">Brain Dump Tasks</h3>
+      <button class="profile-modal-close" 
+              data-action="click->brain-dump#closeModal">
+        <%= close_icon(css_class: "icon") %>
+      </button>
+    </div>
+    <div class="profile-modal-content">
+      <%= form_with url: brain_dump_tasks_path, 
+          method: :post, 
+          local: false,
+          data: { 
+            brain_dump_target: "form",
+            action: "submit->brain-dump#submitForm"
+          } do |form| %>
+        
+        <div data-brain-dump-target="errors" 
+             class="brain-dump-errors" 
+             style="display: none;">
+        </div>
+        
+        <div class="brain-dump-input-container">
+          <label for="brain_dump_text" class="brain-dump-label">
+            Enter one task per line:
+          </label>
+          <%= form.text_area :brain_dump_text, 
+              rows: 8, 
+              placeholder: "Write documentation\nFix login bug\nReview pull request\nDeploy to staging", 
+              class: "brain-dump-textarea",
+              data: { brain_dump_target: "textarea" },
+              required: true %>
+          <p class="brain-dump-help">
+            Each line will become a separate task. Empty lines will be ignored.
+          </p>
+        </div>
+        
+        <div class="profile-modal-actions">
+          <button type="button" 
+                  class="btn-cancel" 
+                  data-action="click->brain-dump#closeModal">
+            Cancel
+          </button>
+          <%= form.submit "Create Tasks", 
+              class: "btn-save", 
+              data: { brain_dump_target: "submitButton" } %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div> 

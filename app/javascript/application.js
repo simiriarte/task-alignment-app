@@ -324,15 +324,143 @@ function initializeProfilePhotoModal() {
   }
 }
 
+// Task Undo Manager - Global undo functionality for task deletions
+window.TaskUndoManager = {
+  deletedTasks: [],
+  maxUndoStackSize: 10,
+
+  addDeletion(undoData) {
+    this.deletedTasks.unshift(undoData)
+    
+    // Limit stack size to prevent memory issues
+    if (this.deletedTasks.length > this.maxUndoStackSize) {
+      this.deletedTasks = this.deletedTasks.slice(0, this.maxUndoStackSize)
+    }
+    
+    console.log('Added deletion to undo stack:', undoData)
+  },
+
+  async undoLastDeletion() {
+    if (this.deletedTasks.length === 0) {
+      console.log('No deletions to undo')
+      return
+    }
+
+    const undoData = this.deletedTasks.shift()
+    console.log('Undoing deletion:', undoData)
+
+    try {
+      const response = await fetch('/tasks/undo_delete', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+          task_data: undoData.taskData
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          // Restore the task card to its original position
+          this.restoreTaskToDOM(undoData, data.task_html)
+          this.showSuccessMessage("Task restored successfully")
+        } else {
+          this.showError(data.error || "Failed to restore task")
+        }
+      } else {
+        this.showError("Failed to restore task")
+      }
+    } catch (error) {
+      console.error("Error restoring task:", error)
+      this.showError("Failed to restore task")
+    }
+  },
+
+  restoreTaskToDOM(undoData, newTaskHtml) {
+    const { parentElement, nextElement } = undoData
+    
+    if (parentElement) {
+      // Check if we need to hide empty state first
+      const emptyState = parentElement.querySelector('.section-empty-state')
+      if (emptyState) {
+        emptyState.style.display = 'none'
+      }
+      
+      if (nextElement && nextElement.parentElement === parentElement) {
+        // Insert before the next element
+        nextElement.insertAdjacentHTML('beforebegin', newTaskHtml)
+      } else {
+        // Append to the end of the parent
+        parentElement.insertAdjacentHTML('beforeend', newTaskHtml)
+      }
+    }
+  },
+
+  showSuccessMessage(message) {
+    this.showFlashMessage(message, 'notice')
+  },
+
+  showError(message) {
+    this.showFlashMessage(message, 'alert')
+  },
+
+  showFlashMessage(message, type) {
+    const flashMessage = document.createElement('div')
+    flashMessage.className = type
+    flashMessage.textContent = message
+    
+    const mainContent = document.querySelector('.main-content')
+    if (mainContent) {
+      mainContent.insertBefore(flashMessage, mainContent.firstChild)
+      
+      setTimeout(() => {
+        flashMessage.remove()
+      }, 3000)
+    }
+  }
+}
+
+// Global keyboard shortcuts
+function initializeKeyboardShortcuts() {
+  document.addEventListener('keydown', function(e) {
+    // Check for Ctrl+Z (Windows/Linux) or Cmd+Z (Mac)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      // Prevent default browser undo behavior
+      e.preventDefault()
+      
+      // Only trigger undo if we're not in an input field
+      const activeElement = document.activeElement
+      const isInInput = activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' || 
+        activeElement.contentEditable === 'true'
+      )
+      
+      if (!isInInput) {
+        window.TaskUndoManager.undoLastDeletion()
+      }
+    }
+  })
+}
+
+
+
 // Initialize all functionality on DOMContentLoaded and Turbo navigation
 document.addEventListener('DOMContentLoaded', function() {
   initializeAccordion();
   initializeWinsSidebar();
   initializeProfilePhotoModal();
+  initializeKeyboardShortcuts();
 });
 
 document.addEventListener('turbo:load', function() {
   initializeAccordion();
   initializeWinsSidebar();
   initializeProfilePhotoModal();
+  initializeKeyboardShortcuts();
 });

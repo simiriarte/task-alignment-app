@@ -1,0 +1,45 @@
+<div class="task-card" data-task-id="<%= task.id %>" data-controller="task-card">
+  <%= form_with model: task, local: false, 
+      data: { 
+        task_card_target: "form",
+        action: "submit->task-card#submitForm change->task-card#autoSave"
+      } do |form| %>
+    
+    <!-- Header -->
+    <div class="task-header">
+      <%= form.text_field :title, 
+          placeholder: "Enter task title...", 
+          class: "task-title",
+          data: { 
+            task_card_target: "titleInput",
+            action: "focus->task-card#selectAllText"
+          } %>
+      
+      <div class="header-actions">
+        <button type="button" class="icon-btn close-icon" 
+                data-action="click->task-card#deleteTask"
+                title="Delete task"></button>
+      </div>
+    </div>
+    
+    <!-- Due Date Input -->
+    <div class="due-date-row">
+      <div class="date-input">
+        <%= form.text_field :due_date, 
+            value: task.due_date ? "due: #{task.due_date.strftime('%-m/%-d')}" : "due: ",
+            placeholder: "",
+            class: "date-field",
+            pattern: "[0-9/]*",
+            inputmode: "numeric",
+            data: { 
+              task_card_target: "dueDateInput",
+              action: "change->task-card#autoSave keydown->task-card#validateDateInput focus->task-card#handleDateFieldFocus"
+            } %>
+        <div class="calendar-icon" data-action="click->task-card#showDatePicker">
+          <%= calendar_icon(css_class: "calendar-icon-svg") %>
+        </div>
+      </div>
+    </div>
+    
+  <% end %>
+</div> 

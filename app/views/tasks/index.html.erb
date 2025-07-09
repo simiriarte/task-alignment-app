@@ -80,27 +80,48 @@
     <div class="dashboard-grid">
       
       <!-- Top Left: Filter Tasks (Always Active) -->
-      <div class="dashboard-section filter-tasks section-active">
+      <div class="dashboard-section filter-tasks section-active" 
+           data-controller="filter-tasks" 
+           data-filter-tasks-url-value="<%= tasks_path %>">
         <div class="section-header">
           <h2 class="section-title">Filter Tasks</h2>
-          <div class="section-count"><%= @unrated_count %> unfiltered</div>
+          <div class="section-header-actions">
+            <button class="section-action-btn" 
+                    title="Add new task" 
+                    data-action="click->filter-tasks#addNewTask">
+              <%= plus_icon(css_class: "icon") %>
+            </button>
+            <button class="section-action-btn" 
+                    title="Brain dump tasks" 
+                    data-action="click->brain-dump#openModal">
+              <%= edit_icon(css_class: "icon") %>
+            </button>
+          </div>
+          <div class="section-count" data-filter-tasks-target="counter">
+            <%= @unrated_count %> unfiltered
+          </div>
         </div>
         <div class="section-content">
-          <div class="section-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"/>
-            </svg>
-          </div>
           <% if @unrated_count > 0 %>
-            <h3 class="section-empty-title"><%= pluralize(@unrated_count, 'task') %> to rate</h3>
-            <p class="section-empty-description">
-              Review and rate these tasks to prioritize your work.
-            </p>
+            <!-- Task Cards Container -->
+            <div class="task-cards-container" data-filter-tasks-target="taskContainer">
+              <% current_user.tasks.where(status: 'unrated').order(created_at: :desc).each do |task| %>
+                <%= render 'task_card', task: task %>
+              <% end %>
+            </div>
           <% else %>
-            <h3 class="section-empty-title">No unfiltered tasks</h3>
-            <p class="section-empty-description">
-              Use the brain dump or add task buttons to create new tasks that need to be rated!
-            </p>
+            <!-- Empty State -->
+            <div class="section-empty-state" data-filter-tasks-target="emptyState">
+              <div class="section-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"/>
+                </svg>
+              </div>
+              <h3 class="section-empty-title">No unfiltered tasks</h3>
+              <p class="section-empty-description">
+                Use the brain dump or add task buttons to create new tasks that need to be rated!
+              </p>
+            </div>
           <% end %>
         </div>
       </div>
@@ -287,3 +308,5 @@
     </div>
   </div>
 </div>
+
+<%= render 'brain_dump_modal' %>

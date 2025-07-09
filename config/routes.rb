@@ -1,7 +1,15 @@
 Rails.application.routes.draw do
   get "home/index"
   devise_for :users
-  resources :tasks
+  resources :tasks do
+    collection do
+      post :brain_dump
+      post :undo_delete
+    end
+    member do
+      post :duplicate
+    end
+  end
   
   # Profile routes
   post "profile/update_photo", to: "profile#update_photo"
