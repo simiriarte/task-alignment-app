@@ -33,7 +33,7 @@
             inputmode: "numeric",
             data: { 
               task_card_target: "dueDateInput",
-              action: "change->task-card#autoSave keydown->task-card#validateDateInput focus->task-card#handleDateFieldFocus"
+              action: "change->task-card#autoSave keydown->task-card#validateDateInput focus->task-card#handleDateFieldFocus input->task-card#handleDateInput paste->task-card#handleDatePaste"
             } %>
         <div class="calendar-icon" data-action="click->task-card#showDatePicker">
           <%= calendar_icon(css_class: "calendar-icon-svg") %>

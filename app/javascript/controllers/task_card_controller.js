@@ -308,6 +308,7 @@ export default class extends Controller {
     
     // Ensure the field always starts with "due: "
     if (!currentValue.startsWith("due: ")) {
+      event.preventDefault()
       input.value = "due: "
       input.setSelectionRange(5, 5)
       return
@@ -349,36 +350,87 @@ export default class extends Controller {
     
     // Auto-format after the key is processed
     setTimeout(() => {
-      let value = input.value
-      
-      // Ensure we still have the prefix
-      if (!value.startsWith("due: ")) {
-        value = "due: " + value.replace(/^due:\s*/, '')
-      }
-      
-      // Extract just the date part for formatting
-      const datePartMatch = value.match(/due:\s*(.*)/)
-      const datePart = datePartMatch ? datePartMatch[1] : ''
-      const cleanValue = datePart.replace(/\D/g, '')
-      
-      // Auto-add slash after month
-      let formattedDate = ''
-      if (cleanValue.length >= 2) {
-        formattedDate = cleanValue.slice(0, 2) + '/' + cleanValue.slice(2, 4)
-      } else {
-        formattedDate = cleanValue
-      }
-      
-      // Update the input value
-      input.value = 'due: ' + formattedDate
-      
-      // Position cursor at the end
-      input.setSelectionRange(input.value.length, input.value.length)
+      this.ensureDuePrefixAndFormat(input)
     }, 0)
+  }
+
+  ensureDuePrefixAndFormat(input) {
+    let value = input.value
+    
+    // Ensure we always have the prefix
+    if (!value.startsWith("due: ")) {
+      value = "due: " + value.replace(/^due:\s*/, '')
+    }
+    
+    // Extract just the date part for formatting
+    const datePartMatch = value.match(/due:\s*(.*)/)
+    const datePart = datePartMatch ? datePartMatch[1] : ''
+    const cleanValue = datePart.replace(/\D/g, '')
+    
+    // Auto-add slash after month
+    let formattedDate = ''
+    if (cleanValue.length >= 2) {
+      formattedDate = cleanValue.slice(0, 2) + '/' + cleanValue.slice(2, 4)
+    } else {
+      formattedDate = cleanValue
+    }
+    
+    // Update the input value
+    const newValue = 'due: ' + formattedDate
+    if (input.value !== newValue) {
+      const cursorPos = input.selectionStart
+      input.value = newValue
+      
+      // Try to maintain cursor position relative to the date part
+      const newCursorPos = Math.min(cursorPos, newValue.length)
+      input.setSelectionRange(newCursorPos, newCursorPos)
+    }
+  }
+
+  handleDateInput(event) {
+    const input = event.target
+    // Use a short delay to let the input event complete, then ensure formatting
+    setTimeout(() => {
+      this.ensureDuePrefixAndFormat(input)
+    }, 10)
+  }
+
+  handleDatePaste(event) {
+    const input = event.target
+    // Prevent default paste behavior and handle it manually
+    event.preventDefault()
+    
+    // Get pasted content
+    const pastedText = (event.clipboardData || window.clipboardData).getData('text')
+    
+    // Clean the pasted text (remove any existing "due:" and extract numbers/slashes)
+    const cleanText = pastedText.replace(/^due:\s*/, '').replace(/[^\d\/]/g, '')
+    
+    // Get current cursor position (ensure it's after "due: ")
+    const cursorPos = Math.max(input.selectionStart, 5)
+    const currentValue = input.value
+    
+    // Insert the cleaned text after "due: "
+    const beforeCursor = currentValue.substring(0, cursorPos)
+    const afterCursor = currentValue.substring(input.selectionEnd)
+    
+    // Combine and ensure we keep the "due: " prefix
+    let newValue = beforeCursor + cleanText + afterCursor
+    if (!newValue.startsWith("due: ")) {
+      newValue = "due: " + newValue.replace(/^due:\s*/, '')
+    }
+    
+    input.value = newValue
+    
+    // Format the result
+    setTimeout(() => {
+      this.ensureDuePrefixAndFormat(input)
+    }, 10)
   }
 
   showDatePicker(event) {
     event.preventDefault()
+    event.stopPropagation() // Prevent event bubbling
     console.log("Calendar icon clicked")
     
     // Remove any existing calendar modal
@@ -408,10 +460,10 @@ export default class extends Controller {
     // Add event listeners
     this.setupCalendarEvents(calendarModal)
     
-    // Close on click outside
+    // Close on click outside - use a longer delay to ensure the modal is fully created
     setTimeout(() => {
       document.addEventListener('click', this.handleClickOutside.bind(this, calendarModal), { once: true })
-    }, 10)
+    }, 100)
   }
   
   generateCalendarHTML() {

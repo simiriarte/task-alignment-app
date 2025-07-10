@@ -4,16 +4,16 @@ module ApplicationHelper
   def icon(name, variant: :outline, size: :md, css_class: nil, **options)
     size_classes = {
       xs: "h-3 w-3",
-      sm: "h-4 w-4", 
+      sm: "h-4 w-4",
       md: "h-5 w-5",
       lg: "h-6 w-6",
       xl: "h-8 w-8",
       "2xl": "h-10 w-10"
     }
-    
+
     default_classes = size_classes[size] || size_classes[:md]
-    classes = [default_classes, css_class].compact.join(" ")
-    
+    classes = [ default_classes, css_class ].compact.join(" ")
+
     heroicon(name, variant: variant, options: { class: classes, **options })
   end
 
