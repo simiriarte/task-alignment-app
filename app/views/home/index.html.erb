@@ -214,9 +214,9 @@
         </p>
       </div>
 
-      <div class="auth-actions">
-        <%= link_to "Sign Up", new_user_registration_path, class: "btn btn-primary btn-large" %>
-        <%= link_to "Sign In", new_user_session_path, class: "btn btn-outline btn-large" %>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <%= link_to "Sign Up", new_user_registration_path, class: "inline-flex justify-center items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+        <%= link_to "Sign In", new_user_session_path, class: "inline-flex justify-center items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
       </div>
     <% end %>
   </div>
@@ -337,7 +337,7 @@
 </script>
 
 <%# Icon System Demo Section %>
-<div class="container">
+<div class="max-w-4xl mx-auto px-4 py-6">
   <div class="icon-demo-section" style="margin-bottom: 40px;">
     <h2>🎨 Icon System Demo</h2>
     <p>Here's how to use all the available icons in your templates:</p>

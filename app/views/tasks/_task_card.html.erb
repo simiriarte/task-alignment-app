@@ -26,8 +26,8 @@
     <div class="due-date-row">
       <div class="date-input">
         <%= form.text_field :due_date, 
-            value: task.due_date ? "due: #{task.due_date.strftime('%-m/%-d')}" : "due: ",
-            placeholder: "",
+            value: task.due_date ? "due: #{task.due_date.strftime('%-m/%-d')}" : "",
+            placeholder: "due: mm/dd",
             class: "date-field",
             pattern: "[0-9/]*",
             inputmode: "numeric",

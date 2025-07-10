@@ -1,55 +1,57 @@
-<div class="container">
-  <div class="page-header">
-    <h1><%= @task.title %></h1>
-    <div>
-      <%= link_to edit_task_path(@task), class: "btn btn-primary" do %>
+<div class="max-w-4xl mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-900"><%= @task.title %></h1>
+    <div class="flex space-x-3">
+      <%= link_to edit_task_path(@task), class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
         <%= edit_icon %> Edit
       <% end %>
-      <%= link_to tasks_path, class: "btn btn-outline" do %>
+      <%= link_to tasks_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
         <%= chevron_left_icon %> Back to Tasks
       <% end %>
     </div>
   </div>
 
-  <div class="task-details">
-    <div class="detail-section">
-      <h3>Status</h3>
-      <p><%= @task.status.capitalize %></p>
-    </div>
-
-    <% if @task.due_date %>
-      <div class="detail-section">
-        <h3>Due Date</h3>
-        <p><%= @task.due_date.strftime("%B %d, %Y") %></p>
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+      <div class="mb-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Status</h3>
+        <p class="text-sm text-gray-700"><%= @task.status.capitalize %></p>
       </div>
-    <% end %>
 
-    <% if @task.notes.present? %>
-      <div class="detail-section">
-        <h3>Notes</h3>
-        <p><%= simple_format(@task.notes) %></p>
+      <% if @task.due_date %>
+        <div class="mb-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Due Date</h3>
+          <p class="text-sm text-gray-700"><%= @task.due_date.strftime("%B %d, %Y") %></p>
+        </div>
+      <% end %>
+
+      <% if @task.notes.present? %>
+        <div class="mb-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Notes</h3>
+          <p class="text-sm text-gray-700"><%= simple_format(@task.notes) %></p>
+        </div>
+      <% end %>
+
+      <div class="mb-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Metrics</h3>
+        <ul class="text-sm text-gray-700 space-y-2">
+          <li><span class="font-medium">Energy:</span> <%= @task.energy || "Not set" %></li>
+          <li><span class="font-medium">Simplicity:</span> <%= @task.simplicity || "Not set" %></li>
+          <li><span class="font-medium">Impact:</span> <%= @task.impact || "Not set" %></li>
+          <li><span class="font-medium">Score:</span> <%= @task.score ? @task.score.round(1) : "Not calculated" %></li>
+        </ul>
       </div>
-    <% end %>
-
-    <div class="detail-section">
-      <h3>Metrics</h3>
-      <ul>
-        <li>Energy: <%= @task.energy || "Not set" %></li>
-        <li>Simplicity: <%= @task.simplicity || "Not set" %></li>
-        <li>Impact: <%= @task.impact || "Not set" %></li>
-        <li>Score: <%= @task.score ? @task.score.round(1) : "Not calculated" %></li>
-      </ul>
     </div>
   </div>
 
-  <div class="task-actions">
-    <%= link_to edit_task_path(@task), class: "btn btn-primary" do %>
+  <div class="mt-6 flex space-x-3">
+    <%= link_to edit_task_path(@task), class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
       <%= edit_icon %> Edit
     <% end %>
-    <%= link_to @task, method: :delete, confirm: "Are you sure?", class: "btn btn-outline" do %>
+    <%= link_to @task, method: :delete, confirm: "Are you sure?", class: "inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" do %>
       <%= delete_icon %> Delete
     <% end %>
-    <%= link_to tasks_path, class: "btn btn-outline" do %>
+    <%= link_to tasks_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
       <%= chevron_left_icon %> Back to Tasks
     <% end %>
   </div>
