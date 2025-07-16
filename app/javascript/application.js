@@ -47,6 +47,8 @@ function initializeAccordion() {
 
 // Wins Sidebar Functionality
 function initializeWinsSidebar() {
+  console.log('Initializing wins sidebar...');
+  
   const winsSidebar = document.getElementById('winsSidebar');
   const winsToggle = document.getElementById('winsToggle');
   const winsClose = document.getElementById('winsClose');
@@ -55,9 +57,28 @@ function initializeWinsSidebar() {
   const winsList = document.getElementById('winsList');
   const mainContent = document.querySelector('.main-content');
   
+  console.log('Elements found:', {
+    winsSidebar: !!winsSidebar,
+    winsToggle: !!winsToggle,
+    winsClose: !!winsClose,
+    winsInput: !!winsInput,
+    winsAddBtn: !!winsAddBtn,
+    winsList: !!winsList,
+    mainContent: !!mainContent
+  });
+  
   if (!winsSidebar || !winsToggle || !winsClose || !winsInput || !winsAddBtn || !winsList || !mainContent) {
-    return; // Exit if elements not found (not on tasks page)
+    console.log('Some wins sidebar elements not found, exiting initialization');
+    return false; // Return false to indicate failure
   }
+  
+  // Check if already initialized to prevent duplicate event listeners
+  if (winsSidebar.dataset.initialized === 'true') {
+    console.log('Wins sidebar already initialized');
+    return true;
+  }
+  
+  console.log('All wins sidebar elements found, proceeding with initialization');
   
   // Load wins from localStorage
   function loadWins() {
@@ -79,15 +100,10 @@ function initializeWinsSidebar() {
              winItem.innerHTML = `
          <div class="wins-icon">
            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-             <!-- Main trophy cup - wide bowl -->
              <path d="M7 3h10v6c0 2.8-2.2 5-5 5s-5-2.2-5-5V3z"/>
-             <!-- Left handle -->
              <path d="M5 6h2v4c0 .5-.5 1-1 1s-1-.5-1-1V6z"/>
-             <!-- Right handle -->
              <path d="M17 6h2v4c0 .5-.5 1-1 1s-1-.5-1-1V6z"/>
-             <!-- Narrow stem -->
              <rect x="10.5" y="14" width="3" height="3" rx="1"/>
-             <!-- Wide base -->
              <rect x="8" y="17" width="8" height="2" rx="1"/>
            </svg>
          </div>
@@ -150,6 +166,11 @@ function initializeWinsSidebar() {
   
   // Load wins on page load
   loadWins();
+  
+  // Mark as initialized
+  winsSidebar.dataset.initialized = 'true';
+  console.log('Wins sidebar successfully initialized');
+  return true;
 }
 
 // Profile Photo Modal Functionality
@@ -450,17 +471,46 @@ function initializeKeyboardShortcuts() {
 
 
 
+// Aggressive wins sidebar initialization with retries
+function initializeWinsSidebarWithRetries() {
+  let attempts = 0;
+  const maxAttempts = 10;
+  
+  function tryInitialize() {
+    attempts++;
+    console.log(`Wins sidebar initialization attempt ${attempts}`);
+    
+    const success = initializeWinsSidebar();
+    
+    if (success) {
+      console.log('Wins sidebar initialization successful');
+      return;
+    }
+    
+    if (attempts < maxAttempts) {
+      console.log(`Wins sidebar initialization failed, retrying in ${attempts * 100}ms...`);
+      setTimeout(tryInitialize, attempts * 100);
+    } else {
+      console.log('Wins sidebar initialization failed after maximum attempts');
+    }
+  }
+  
+  tryInitialize();
+}
+
 // Initialize all functionality on DOMContentLoaded and Turbo navigation
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOMContentLoaded event fired');
   initializeAccordion();
-  initializeWinsSidebar();
+  initializeWinsSidebarWithRetries();
   initializeProfilePhotoModal();
   initializeKeyboardShortcuts();
 });
 
 document.addEventListener('turbo:load', function() {
+  console.log('turbo:load event fired');
   initializeAccordion();
-  initializeWinsSidebar();
+  initializeWinsSidebarWithRetries();
   initializeProfilePhotoModal();
   initializeKeyboardShortcuts();
 });

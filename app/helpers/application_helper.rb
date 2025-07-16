@@ -157,4 +157,27 @@ module ApplicationHelper
   def success_icon(size: :md, css_class: nil, **options)
     icon("check-circle", size: size, css_class: css_class, **options)
   end
+
+  # Custom trophy icon since Heroicons doesn't have one
+  def trophy_icon(size: :md, css_class: nil, **options)
+    size_classes = {
+      xs: "h-3 w-3",
+      sm: "h-4 w-4", 
+      md: "h-5 w-5",
+      lg: "h-6 w-6",
+      xl: "h-8 w-8",
+      "2xl": "h-10 w-10"
+    }
+
+    default_classes = size_classes[size] || size_classes[:md]
+    classes = [ default_classes, css_class ].compact.join(" ")
+
+    content_tag :svg, **options.merge(class: classes, viewBox: "0 0 24 24", fill: "currentColor", xmlns: "http://www.w3.org/2000/svg") do
+      concat tag(:path, d: "M7 3h10v6c0 2.8-2.2 5-5 5s-5-2.2-5-5V3z")
+      concat tag(:path, d: "M5 6h2v4c0 .5-.5 1-1 1s-1-.5-1-1V6z")
+      concat tag(:path, d: "M17 6h2v4c0 .5-.5 1-1 1s-1-.5-1-1V6z")
+      concat tag(:rect, x: "10.5", y: "14", width: "3", height: "3", rx: "1")
+      concat tag(:rect, x: "8", y: "17", width: "8", height: "2", rx: "1")
+    end
+  end
 end
