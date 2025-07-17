@@ -1,45 +1,180 @@
-<div class="task-card" data-task-id="<%= task.id %>" data-controller="task-card">
+<div class="task-card" data-task-id="<%= task.id %>" data-status="<%= task.status %>" data-controller="task-card">
   <%= form_with model: task, local: false, 
       data: { 
         task_card_target: "form",
         action: "submit->task-card#submitForm change->task-card#autoSave"
       } do |form| %>
     
-    <!-- Header -->
-    <div class="task-header">
+    <!-- Upper Third: Title, Note Icon, Delete Icon -->
+    <div class="task-card-upper">
       <%= form.text_field :title, 
           placeholder: "Enter task title...", 
-          class: "task-title",
+          class: "task-title-input",
           data: { 
             task_card_target: "titleInput",
             action: "focus->task-card#selectAllText"
           } %>
       
-      <div class="header-actions">
-        <button type="button" class="icon-btn close-icon" 
+      <div class="task-actions">
+        <button type="button" class="action-btn" title="Add notes"
+                data-action="click->task-card#toggleNotes">
+          <%= document_icon(size: :sm) %>
+        </button>
+        <button type="button" class="action-btn delete-btn" 
                 data-action="click->task-card#deleteTask"
-                title="Delete task"></button>
+                title="Delete task">
+          <%= close_icon(size: :sm) %>
+        </button>
       </div>
     </div>
     
-    <!-- Due Date Input -->
-    <div class="due-date-row">
-      <div class="date-input">
-        <%= form.text_field :due_date, 
-            value: task.due_date ? "due: #{task.due_date.strftime('%-m/%-d')}" : "",
-            placeholder: "due: mm/dd",
-            class: "date-field",
-            pattern: "[0-9/]*",
-            inputmode: "numeric",
-            data: { 
-              task_card_target: "dueDateInput",
-              action: "change->task-card#autoSave keydown->task-card#validateDateInput focus->task-card#handleDateFieldFocus input->task-card#handleDateInput paste->task-card#handleDatePaste"
-            } %>
-        <div class="calendar-icon" data-action="click->task-card#showDatePicker">
-          <%= calendar_icon(css_class: "calendar-icon-svg") %>
-        </div>
+    <!-- Middle Third: Due Date and Ratings / Score Display -->
+    <div class="task-card-middle">
+      <div class="middle-fields-row">
+        <% if task.energy && task.simplicity && task.impact %>
+          <!-- Date Display for Rated Tasks - positioned to far left -->
+          <div class="task-date-display">
+            <% if task.due_date %>
+              <span class="due-date-text" 
+                    data-action="dblclick->task-card#editDueDate"
+                    data-task-id="<%= task.id %>"
+                    data-current-date="<%= task.due_date.strftime('%-m/%-d') %>">
+                due: <%= task.due_date.strftime('%-m/%-d') %>
+              </span>
+            <% else %>
+              <span class="added-date-text">added <%= task.created_at.strftime('%-m/%-d') %></span>
+            <% end %>
+          </div>
+          
+          <!-- Score Badge (for rated tasks) - positioned to far right -->
+          <% if task.energy && task.simplicity && task.impact %>
+            <div class="score-container">
+              <div class="score-details">
+                <div class="task-score-detail" title="Energy">
+                  <span class="score-number"><%= task.energy %></span>
+                  <span class="score-letter">E</span>
+                </div>
+                <div class="task-score-detail" title="Simplicity">
+                  <span class="score-number"><%= task.simplicity %></span>
+                  <span class="score-letter">S</span>
+                </div>
+                <div class="task-score-detail" title="Impact">
+                  <span class="score-number"><%= task.impact %></span>
+                  <span class="score-letter">I</span>
+                </div>
+              </div>
+              <div class="task-score-badge" 
+                   data-energy="<%= task.energy %>" 
+                   data-simplicity="<%= task.simplicity %>" 
+                   data-impact="<%= task.impact %>">
+                <%= (task.energy + task.simplicity + task.impact).to_i %>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <!-- Due Date and Rating Fields (for unrated tasks) -->
+          <!-- Due Date -->
+          <div class="due-date-input">
+            <%= form.text_field :due_date, 
+                value: task.due_date ? task.due_date.strftime('%-m/%-d') : "",
+                placeholder: "MM/DD",
+                class: "date-field",
+                data: { 
+                  task_card_target: "dueDateInput",
+                  action: "input->task-card#validateDateFormat change->task-card#autoSave"
+                } %>
+            <button type="button" class="calendar-btn" 
+                    data-action="click->task-card#showDatePicker">
+              <%= calendar_icon(size: :sm) %>
+            </button>
+          </div>
+          
+          <!-- Rating Fields -->
+          <div class="rating-field">
+            <%= form.select :energy, 
+                options_for_select((1..5).map { |i| [i, i] }, task.energy),
+                { prompt: "energy" },
+                { class: "rating-select", data: { action: "change->task-card#autoSave" } } %>
+          </div>
+          <div class="rating-field">
+            <%= form.select :simplicity, 
+                options_for_select((1..5).map { |i| [i, i] }, task.simplicity),
+                { prompt: "simplicity" },
+                { class: "rating-select", data: { action: "change->task-card#autoSave" } } %>
+          </div>
+          <div class="rating-field">
+            <%= form.select :impact, 
+                options_for_select((1..10).map { |i| [i, i] }, task.impact),
+                { prompt: "impact" },
+                { class: "rating-select", data: { action: "change->task-card#autoSave" } } %>
+          </div>
+        <% end %>
       </div>
     </div>
+    
+    <!-- Bottom Third: Cognitive Density, Estimated Hours, Focus, Actions -->
+    <div class="task-card-bottom">
+      <!-- Cognitive Density Circle -->
+      <div class="cognitive-density">
+        <button type="button" class="density-circle <%= "level-#{task.cognitive_density}" if task.cognitive_density && task.cognitive_density > 0 %>" 
+                data-action="click->task-card#cycleCognitiveDensity">
+        </button>
+      </div>
+      
+      <!-- Estimated Hours -->
+      <div class="estimated-hours">
+        <% (1..8).each do |hour| %>
+          <button type="button" class="hour-btn <%= 'active' if task.estimated_hours && task.estimated_hours >= hour %>" 
+                  data-action="click->task-card#setEstimatedHours" 
+                  data-hours="<%= hour %>">
+            <%= hour %>
+          </button>
+        <% end %>
+        <span class="hours-label">est hrs</span>
+      </div>
+      
+      <!-- Focus Task Checkbox -->
+      <div class="focus-task">
+        <%= form.hidden_field :is_focus_task %>
+        <button type="button" class="custom-checkbox <%= 'checked' if task.is_focus_task %>" 
+                data-action="click->task-card#toggleFocusTask">
+          <%= check_icon(size: :sm, css_class: "check-icon") %>
+        </button>
+        <label class="focus-label">focus task</label>
+      </div>
+      
+      
+      <!-- Action Buttons -->
+      <div class="card-actions">
+        <button type="button" class="card-action-btn" title="Add subtask">
+          <%= plus_icon(size: :sm) %>
+        </button>
+        <button type="button" class="card-action-btn" title="Unpack task" 
+                data-action="click->brain-dump#openModal">
+          <%= chevron_down_icon(size: :sm) %>
+        </button>
+        <button type="button" class="card-action-btn park-btn" 
+                title="<%= task.status == 'parked' ? 'Unpark task' : 'Park task' %>"
+                data-action="click->task-card#parkTask">
+          P
+        </button>
+        <% if task.status == 'unrated' %>
+          <button type="button" class="card-action-btn rate-btn" title="Rate and prioritize"
+                  data-action="click->task-card#moveToRated">
+            <%= chevron_right_icon(size: :sm) %>
+          </button>
+        <% elsif task.status == 'rated' || task.status == 'parked' %>
+          <button type="button" class="card-action-btn complete-btn" title="Complete task"
+                  data-action="click->task-card#completeTask">
+            <%= check_icon(size: :sm) %>
+          </button>
+        <% end %>
+      </div>
+    </div>
+    
+    <!-- Hidden fields for form submission -->
+    <%= form.hidden_field :cognitive_density, data: { task_card_target: "cognitiveDensityInput" } %>
+    <%= form.hidden_field :estimated_hours, data: { task_card_target: "estimatedHoursInput" } %>
     
   <% end %>
 </div> 

@@ -1,11 +1,14 @@
 <!-- Brain Dump Modal -->
-<div data-controller="brain-dump" 
-     data-brain-dump-url-value="<%= brain_dump_tasks_path %>"
-     data-action="keydown@window->brain-dump#handleKeydown">
+<div data-action="keydown@window->brain-dump#handleKeydown">
   
-  <div class="profile-modal" 
-       data-brain-dump-target="modal"
+  <!-- Modal Backdrop -->
+  <div class="brain-dump-backdrop" 
+       data-brain-dump-target="backdrop"
        data-action="click->brain-dump#handleBackdropClick">
+  </div>
+  
+  <div class="brain-dump-modal" 
+       data-brain-dump-target="modal">
     <div class="profile-modal-header">
       <h3 class="profile-modal-title">Brain Dump Tasks</h3>
       <button class="profile-modal-close" 
@@ -43,6 +46,9 @@
         </div>
         
         <div class="profile-modal-actions">
+          <div class="keyboard-hint">
+            <kbd>⌘</kbd><kbd>Enter</kbd> to submit
+          </div>
           <button type="button" 
                   class="btn-cancel" 
                   data-action="click->brain-dump#closeModal">

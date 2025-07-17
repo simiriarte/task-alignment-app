@@ -67,9 +67,23 @@ class TasksController < ApplicationController
   # PATCH/PUT /tasks/1
   def update
     if @task.update(task_params)
+      # Calculate updated counts in case status changed
+      updated_counts = {
+        unrated_count: current_user.tasks.where(status: "unrated").count,
+        rated_count: current_user.tasks.where(status: "rated").count,
+        parked_count: current_user.tasks.where(status: "parked").count,
+        completed_count: current_user.tasks.where(status: "completed").count
+      }
+      
       respond_to do |format|
         format.html { redirect_to @task, notice: "Task was successfully updated." }
-        format.json { render json: { success: true, task: @task } }
+        format.json { 
+          render json: { 
+            success: true, 
+            task: @task,
+            counts: updated_counts
+          } 
+        }
       end
     else
       respond_to do |format|
@@ -86,6 +100,15 @@ class TasksController < ApplicationController
     task_html = render_to_string(partial: "task_card", locals: { task: @task }, formats: [ :html ])
 
     @task.destroy
+    
+    # Calculate updated counts after deletion
+    updated_counts = {
+      unrated_count: current_user.tasks.where(status: "unrated").count,
+      rated_count: current_user.tasks.where(status: "rated").count,
+      parked_count: current_user.tasks.where(status: "parked").count,
+      completed_count: current_user.tasks.where(status: "completed").count
+    }
+    
     respond_to do |format|
       format.html { redirect_to tasks_url, notice: "Task was successfully deleted." }
       format.json {
@@ -93,7 +116,8 @@ class TasksController < ApplicationController
           success: true,
           message: "Task was successfully deleted.",
           task_data: task_data,
-          task_html: task_html
+          task_html: task_html,
+          counts: updated_counts
         }
       }
     end
@@ -158,8 +182,8 @@ class TasksController < ApplicationController
         energy: nil,
         simplicity: nil,
         impact: nil,
-        cognitive_density: 1,
-        estimated_hours: 1
+        cognitive_density: 0,
+        estimated_hours: 0
       )
 
       if task.save
@@ -172,6 +196,15 @@ class TasksController < ApplicationController
 
     if failed_tasks.empty?
       success_message = "Successfully created #{created_count} task#{'s' if created_count != 1}."
+      
+      # Calculate updated counts after brain dump
+      updated_counts = {
+        unrated_count: current_user.tasks.where(status: "unrated").count,
+        rated_count: current_user.tasks.where(status: "rated").count,
+        parked_count: current_user.tasks.where(status: "parked").count,
+        completed_count: current_user.tasks.where(status: "completed").count
+      }
+      
       respond_to do |format|
         format.html { redirect_to tasks_url, notice: success_message }
         format.json {
@@ -179,7 +212,8 @@ class TasksController < ApplicationController
             success: true,
             message: success_message,
             created_count: created_count,
-            tasks: created_tasks.as_json(only: [ :id, :title, :status ])
+            tasks: created_tasks.as_json(only: [ :id, :title, :status ]),
+            counts: updated_counts
           }
         }
       end

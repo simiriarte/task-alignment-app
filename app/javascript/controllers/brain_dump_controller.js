@@ -3,6 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "modal", 
+    "backdrop",
     "form", 
     "textarea", 
     "errors", 
@@ -16,38 +17,69 @@ export default class extends Controller {
   connect() {
     // Initialize modal state
     this.closeModal()
+    // Update keyboard hint for the user's OS
+    this.updateKeyboardHint()
+  }
+  
+  updateKeyboardHint() {
+    const hint = this.element.querySelector('.keyboard-hint')
+    if (hint) {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
+      hint.innerHTML = isMac 
+        ? '<kbd>⌘</kbd><kbd>Enter</kbd> to submit' 
+        : '<kbd>Ctrl</kbd><kbd>Enter</kbd> to submit'
+    }
   }
 
   // Open modal
   openModal(event) {
     event.preventDefault()
+    
+    if (!this.hasModalTarget || !this.hasBackdropTarget) {
+      console.error("Brain dump modal or backdrop target not found!")
+      return
+    }
+    
+    this.backdropTarget.classList.add('show')
     this.modalTarget.classList.add('show')
     this.clearErrors()
     
     // Focus on textarea after animation
     setTimeout(() => {
-      this.textareaTarget.focus()
-    }, 100)
+      if (this.hasTextareaTarget) {
+        this.textareaTarget.focus()
+      }
+    }, 150)
   }
 
   // Close modal
   closeModal() {
     this.modalTarget.classList.remove('show')
+    this.backdropTarget.classList.remove('show')
     this.textareaTarget.value = ''
     this.clearErrors()
   }
 
   // Handle clicking outside modal
   handleBackdropClick(event) {
-    if (event.target === this.modalTarget) {
+    if (event.target === this.backdropTarget) {
       this.closeModal()
     }
   }
 
-  // Handle escape key
+  // Handle keyboard shortcuts
   handleKeydown(event) {
-    if (event.key === 'Escape' && this.modalTarget.classList.contains('show')) {
+    if (!this.modalTarget.classList.contains('show')) return
+    
+    // Escape to close
+    if (event.key === 'Escape') {
       this.closeModal()
+    }
+    
+    // Cmd+Enter or Ctrl+Enter to submit
+    if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault()
+      this.submitForm(event)
     }
   }
 
@@ -114,6 +146,11 @@ export default class extends Controller {
   handleSuccess(data) {
     this.closeModal()
     
+    // Update counters immediately if available
+    if (data.counts && window.DashboardCounters) {
+      window.DashboardCounters.updateCounters(data.counts)
+    }
+    
     // Create and show flash message
     const flashMessage = document.createElement('div')
     flashMessage.className = 'notice'
@@ -129,8 +166,30 @@ export default class extends Controller {
       }, 5000)
     }
     
-    // Refresh the page to show new tasks
-    window.location.reload()
+    // Instead of reloading, let's update the UI dynamically
+    this.updateTasksAfterBrainDump(data)
+  }
+  
+  // Update the tasks section after brain dump creation
+  updateTasksAfterBrainDump(data) {
+    // Find the filter tasks controller
+    const filterTasksElement = document.querySelector('[data-controller*="filter-tasks"]')
+    if (filterTasksElement) {
+      const filterTasksController = this.application.getControllerForElementAndIdentifier(
+        filterTasksElement, 
+        'filter-tasks'
+      )
+      
+      // If we have created tasks data, add them to the filter section
+      if (data.tasks && data.tasks.length > 0 && filterTasksController) {
+        // For now, just reload to show the new tasks
+        // In the future, we could render the task cards directly
+        window.location.reload()
+      }
+    } else {
+      // Fallback to page reload
+      window.location.reload()
+    }
   }
 
   // Set submit button state

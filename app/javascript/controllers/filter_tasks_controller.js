@@ -25,6 +25,11 @@ export default class extends Controller {
           // Update counter
           this.updateCounter(data.unrated_count)
           
+          // Update global counters if available
+          if (data.unrated_count !== undefined && window.DashboardCounters) {
+            window.DashboardCounters.updateSingleCounter('unrated', data.unrated_count)
+          }
+          
           // Hide empty state if visible
           this.hideEmptyState()
           
@@ -55,10 +60,10 @@ export default class extends Controller {
       },
       body: JSON.stringify({
         task: {
-          title: "Untitled Task",
+          title: "New Task",
           status: "unrated",
-          cognitive_density: 1,
-          estimated_hours: 1
+          cognitive_density: 0,
+          estimated_hours: 0
         },
         inline: true
       })
@@ -143,7 +148,10 @@ export default class extends Controller {
       this.showEmptyState()
     }
     
-    // Update counter (will be updated by the task card controller)
-    // The actual count update should come from the server response
+    // Update local counter based on remaining tasks
+    this.updateCounter(remainingTasks)
+    
+    // Note: Global counters are updated by the task card controller 
+    // when it receives the server response with updated counts
   }
 } 

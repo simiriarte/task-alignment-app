@@ -158,6 +158,10 @@ module ApplicationHelper
     icon("check-circle", size: size, css_class: css_class, **options)
   end
 
+  def logout_icon(size: :md, css_class: nil, **options)
+    icon("arrow-right-on-rectangle", size: size, css_class: css_class, **options)
+  end
+
   # Custom trophy icon since Heroicons doesn't have one
   def trophy_icon(size: :md, css_class: nil, **options)
     size_classes = {

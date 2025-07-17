@@ -2,14 +2,19 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = [
-    "form", "titleInput", "dueDateInput", "energyInput", 
-    "simplicityInput", "impactInput", "estimatedHoursInput", 
-    "focusTaskInput"
+    "form", "titleInput", "dueDateInput", "cognitiveDensityInput", 
+    "estimatedHoursInput"
   ]
 
   connect() {
     console.log("Task card controller connected")
     this.saveTimeout = null
+    
+    // Check if task is already marked as focus task and apply highlight
+    const focusCheckbox = this.element.querySelector('.custom-checkbox')
+    if (focusCheckbox && focusCheckbox.classList.contains('checked')) {
+      this.element.classList.add('focus-task-active')
+    }
   }
 
   disconnect() {
@@ -19,7 +24,7 @@ export default class extends Controller {
   }
 
   selectAllText(event) {
-    // Select all text when focused, especially for "Untitled Task"
+    // Select all text when focused, especially for "New Task"
     setTimeout(() => {
       event.target.select()
     }, 10)
@@ -65,6 +70,11 @@ export default class extends Controller {
         const data = await response.json()
         if (data.success) {
           this.showSaveIndicator()
+          
+          // Update all counters if counts are provided (status may have changed)
+          if (data.counts && window.DashboardCounters) {
+            window.DashboardCounters.updateCounters(data.counts)
+          }
         }
       }
     } catch (error) {
@@ -100,6 +110,69 @@ export default class extends Controller {
     }
   }
 
+  cycleCognitiveDensity(event) {
+    event.preventDefault()
+    
+    const circle = event.target
+    
+    // Get current level from CSS class (default to 0 if no level class found)
+    let currentLevel = 0
+    for (let i = 1; i <= 3; i++) {
+      if (circle.classList.contains(`level-${i}`)) {
+        currentLevel = i
+        break
+      }
+    }
+    
+    // Cycle: blank(0) -> level-1 -> level-2 -> level-3 -> blank(0)
+    const nextLevel = currentLevel === 3 ? 0 : currentLevel + 1
+    
+    // Remove all level classes
+    for (let i = 1; i <= 3; i++) {
+      circle.classList.remove(`level-${i}`)
+    }
+    
+    // Add new level class (only if not going back to blank)
+    if (nextLevel > 0) {
+      circle.classList.add(`level-${nextLevel}`)
+    }
+    
+    // Update hidden field
+    if (this.hasCognitiveDensityInputTarget) {
+      this.cognitiveDensityInputTarget.value = nextLevel
+    }
+    
+    // Auto-save
+    this.autoSave()
+  }
+
+  setEstimatedHours(event) {
+    event.preventDefault()
+    
+    const hours = parseInt(event.target.dataset.hours)
+    const currentValue = this.hasEstimatedHoursInputTarget ? parseInt(this.estimatedHoursInputTarget.value) || 0 : 0
+    
+    // If clicking on the same value, deselect (set to 0)
+    const newHours = (currentValue === hours) ? 0 : hours
+    
+    // Update all hour buttons to show the progressive fill
+    this.element.querySelectorAll('.hour-btn').forEach((btn, index) => {
+      if (index < newHours) {
+        btn.classList.add('active')
+      } else {
+        btn.classList.remove('active')
+      }
+    })
+    
+    // Update hidden field
+    if (this.hasEstimatedHoursInputTarget) {
+      this.estimatedHoursInputTarget.value = newHours
+    }
+    
+    // Auto-save
+    this.autoSave()
+  }
+
   async deleteTask(event) {
     event.preventDefault()
 
@@ -126,6 +199,11 @@ export default class extends Controller {
           // Remove the task card from DOM
           this.element.remove()
           
+          // Update all counters if counts are provided
+          if (data.counts && window.DashboardCounters) {
+            window.DashboardCounters.updateCounters(data.counts)
+          }
+          
           // Store undo data for the global undo system
           if (window.TaskUndoManager) {
             window.TaskUndoManager.addDeletion({
@@ -138,8 +216,6 @@ export default class extends Controller {
           
           // Notify parent controller about deletion
           this.notifyParentOfDeletion()
-          
-          this.showSuccessMessage("Task deleted (Ctrl+Z to undo)")
         }
       }
     } catch (error) {
@@ -161,27 +237,6 @@ export default class extends Controller {
     this.updateTaskStatus(newStatus)
   }
 
-  setEstimatedHours(event) {
-    event.preventDefault()
-    
-    const hours = parseInt(event.target.dataset.hours)
-    
-    // Update all time buttons
-    this.element.querySelectorAll('.time-btn').forEach(btn => {
-      btn.classList.remove('active')
-    })
-    
-    // Mark this button as active
-    event.target.classList.add('active')
-    
-    // Update hidden field
-    if (this.hasEstimatedHoursInputTarget) {
-      this.estimatedHoursInputTarget.value = hours
-    }
-    
-    // Auto-save
-    this.autoSave()
-  }
 
   async updateTaskStatus(status) {
     try {
@@ -203,17 +258,84 @@ export default class extends Controller {
         const data = await response.json()
         if (data.success) {
           this.showSaveIndicator()
+          
+          // Update all counters if counts are provided (status may have changed)
+          if (data.counts && window.DashboardCounters) {
+            window.DashboardCounters.updateCounters(data.counts)
+          }
+          
+          // If status changed to 'rated', 'parked', or 'unrated', remove the card from the current section
+          if (status === 'rated' || status === 'parked' || status === 'unrated') {
+            this.fadeOutAndRemove()
+            
+            // For unrated tasks, reload the page to show task in filter section
+            if (status === 'unrated') {
+              setTimeout(() => {
+                window.location.reload()
+              }, 500)
+            }
+          }
         }
       }
     } catch (error) {
       console.error("Error updating task status:", error)
     }
   }
+  
+  fadeOutAndRemove() {
+    // Add fade out animation
+    this.element.style.transition = 'all 0.3s ease'
+    this.element.style.opacity = '0'
+    this.element.style.transform = 'translateX(20px)'
+    
+    // Remove element after animation
+    setTimeout(() => {
+      this.element.remove()
+      
+      // Notify parent controller about task removal
+      this.notifyParentOfDeletion()
+      
+      // Refresh the page to show the task in the prioritized section
+      // TODO: In the future, we could dynamically add the task to the prioritized section
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
+    }, 300)
+  }
 
   parkTask(event) {
     event.preventDefault()
-    this.updateTaskStatus('parked')
-    this.showSuccessMessage("Task parked")
+    
+    // Store undo information before changing status
+    const taskId = this.element.dataset.taskId
+    const currentStatus = this.element.dataset.status
+    const taskHTML = this.element.outerHTML
+    
+    // Determine the target status based on current status
+    let targetStatus
+    if (currentStatus === 'parked') {
+      // If currently parked, check if it has ratings to determine where to send it
+      const hasRatings = this.hasAllRatings()
+      targetStatus = hasRatings ? 'rated' : 'unrated'
+      
+      this.storeUndoAction('unpark', {
+        taskId: taskId,
+        previousStatus: currentStatus,
+        taskHTML: taskHTML,
+        parentSection: this.element.closest('.dashboard-section')
+      })
+    } else {
+      // If not parked, park it
+      targetStatus = 'parked'
+      this.storeUndoAction('park', {
+        taskId: taskId,
+        previousStatus: currentStatus,
+        taskHTML: taskHTML,
+        parentSection: this.element.closest('.dashboard-section')
+      })
+    }
+    
+    this.updateTaskStatus(targetStatus)
   }
 
   moveToRated(event) {
@@ -221,17 +343,47 @@ export default class extends Controller {
     
     // Check if task has all required ratings
     if (this.hasAllRatings()) {
+      // Store undo information before changing status
+      const taskId = this.element.dataset.taskId
+      const currentStatus = this.element.dataset.status
+      const taskHTML = this.element.outerHTML
+      
+      this.storeUndoAction('rate', {
+        taskId: taskId,
+        previousStatus: currentStatus,
+        taskHTML: taskHTML,
+        parentSection: this.element.closest('.dashboard-section')
+      })
+      
+      // Calculate the score and update status
+      const score = this.calculateScore()
       this.updateTaskStatus('rated')
-      this.showSuccessMessage("Task moved to rated")
     } else {
-      this.showError("Please add energy, simplicity, and impact ratings first")
+      this.highlightMissingRatings()
     }
+  }
+  
+  calculateScore() {
+    const energySelect = this.element.querySelector('select[name="task[energy]"]')
+    const simplicitySelect = this.element.querySelector('select[name="task[simplicity]"]')
+    const impactSelect = this.element.querySelector('select[name="task[impact]"]')
+    
+    const energy = parseFloat(energySelect.value) || 0
+    const simplicity = parseFloat(simplicitySelect.value) || 0
+    const impact = parseFloat(impactSelect.value) || 0
+    
+    // Calculate score using simple addition: energy + simplicity + impact
+    return energy + simplicity + impact
   }
 
   hasAllRatings() {
-    const energy = this.hasEnergyInputTarget ? this.energyInputTarget.value : null
-    const simplicity = this.hasSimplicityInputTarget ? this.simplicityInputTarget.value : null
-    const impact = this.hasImpactInputTarget ? this.impactInputTarget.value : null
+    const energySelect = this.element.querySelector('select[name="task[energy]"]')
+    const simplicitySelect = this.element.querySelector('select[name="task[simplicity]"]')
+    const impactSelect = this.element.querySelector('select[name="task[impact]"]')
+    
+    const energy = energySelect ? energySelect.value : null
+    const simplicity = simplicitySelect ? simplicitySelect.value : null
+    const impact = impactSelect ? impactSelect.value : null
     
     return energy && simplicity && impact
   }
@@ -248,11 +400,7 @@ export default class extends Controller {
   }
 
   showSaveIndicator() {
-    // Briefly flash the card border to indicate save
-    this.element.style.borderLeft = '4px solid #10b981'
-    setTimeout(() => {
-      this.element.style.borderLeft = '4px solid #9ca3af'
-    }, 1000)
+    // No visual indicator needed - changes save automatically
   }
 
   showSuccessMessage(message) {
@@ -720,5 +868,345 @@ export default class extends Controller {
     if (!calendarModal.contains(event.target) && !event.target.closest('.calendar-icon')) {
       calendarModal.remove()
     }
+  }
+
+  toggleFocusTask(event) {
+    event.preventDefault()
+    
+    // Find the button element (in case we clicked on the icon inside)
+    const checkbox = event.target.closest('.custom-checkbox')
+    const isChecked = checkbox.classList.contains('checked')
+    const focusField = this.element.querySelector('input[name="task[is_focus_task]"]')
+    
+    // Toggle the visual state
+    if (isChecked) {
+      // Currently checked, so uncheck it
+      checkbox.classList.remove('checked')
+      this.element.classList.remove('focus-task-active')
+      if (focusField) focusField.value = '0'
+    } else {
+      // Currently unchecked, so check it
+      checkbox.classList.add('checked')
+      this.element.classList.add('focus-task-active')
+      if (focusField) focusField.value = '1'
+    }
+    
+    // Auto-save
+    this.autoSave()
+  }
+
+  editDueDate(event) {
+    const span = event.target
+    const currentDate = span.dataset.currentDate
+    
+    // Create input field
+    const input = document.createElement('input')
+    input.type = 'text'
+    input.value = currentDate
+    input.className = 'due-date-edit-input'
+    input.style.cssText = `
+      font-size: 12px;
+      font-weight: 500;
+      color: #0097f2;
+      border: 1px solid #0097f2;
+      border-radius: 4px;
+      padding: 2px 6px;
+      background: white;
+      width: 60px;
+    `
+    
+    // Replace span with input
+    span.style.display = 'none'
+    span.parentElement.appendChild(input)
+    input.focus()
+    input.select()
+    
+    // Handle save on blur or enter
+    const saveEdit = () => {
+      const newValue = input.value.trim()
+      if (this.isValidDateFormat(newValue)) {
+        // Update the task
+        this.updateDueDate(newValue)
+        span.textContent = `due: ${newValue}`
+        span.dataset.currentDate = newValue
+      }
+      // Restore original display
+      input.remove()
+      span.style.display = ''
+    }
+    
+    // Add input validation for numbers only
+    input.addEventListener('input', (e) => {
+      this.validateDateFormat(e)
+    })
+    
+    input.addEventListener('keydown', (e) => {
+      // Allow: backspace, delete, tab, escape, enter, and arrow keys
+      const allowedKeys = [
+        'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+        'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'
+      ]
+      
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        saveEdit()
+      } else if (e.key === 'Escape') {
+        input.remove()
+        span.style.display = ''
+      } else if (!allowedKeys.includes(e.key) && !/^\d$/.test(e.key)) {
+        // Block any key that isn't a number or allowed control key
+        e.preventDefault()
+      }
+    })
+    
+    input.addEventListener('blur', saveEdit)
+  }
+
+  validateDateFormat(event) {
+    const input = event.target
+    let value = input.value
+    
+    // Remove any non-numeric characters except forward slash
+    value = value.replace(/[^\d\/]/g, '')
+    
+    // Auto-format: add slash after 2 digits if not present
+    if (value.length === 2 && !value.includes('/')) {
+      value = value + '/'
+    }
+    
+    // Limit to MM/DD format (5 characters max)
+    if (value.length > 5) {
+      value = value.substring(0, 5)
+    }
+    
+    input.value = value
+  }
+
+  isValidDateFormat(dateString) {
+    // Check MM/DD format
+    const regex = /^\d{1,2}\/\d{1,2}$/
+    if (!regex.test(dateString)) return false
+    
+    const [month, day] = dateString.split('/').map(Number)
+    return month >= 1 && month <= 12 && day >= 1 && day <= 31
+  }
+
+  async updateDueDate(dateValue) {
+    try {
+      const taskId = this.element.dataset.taskId
+      const formData = new FormData()
+      formData.append('task[due_date]', dateValue)
+      
+      const response = await fetch(`/tasks/${taskId}`, {
+        method: 'PATCH',
+        body: formData,
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          this.showSaveIndicator()
+        }
+      }
+    } catch (error) {
+      console.error("Error updating due date:", error)
+    }
+  }
+
+  toggleNotes(event) {
+    event.preventDefault()
+    
+    // Check if notes section already exists
+    let notesSection = this.element.querySelector('.task-notes-section')
+    
+    if (notesSection) {
+      // Notes section exists, toggle it
+      if (notesSection.style.display === 'none') {
+        notesSection.style.display = 'block'
+        this.element.classList.add('expanded')
+      } else {
+        notesSection.style.display = 'none'
+        this.element.classList.remove('expanded')
+      }
+    } else {
+      // Create notes section
+      notesSection = document.createElement('div')
+      notesSection.className = 'task-notes-section'
+      notesSection.innerHTML = `
+        <textarea class="notes-textarea" 
+                  placeholder="Add notes for this task..."
+                  data-action="blur->task-card#saveNotes"></textarea>
+        <div class="notes-close-section">
+          <button type="button" class="notes-close-btn" 
+                  data-action="click->task-card#closeNotes"
+                  title="Save and close notes">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 14l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      `
+      
+      // Insert after the bottom section
+      const bottomSection = this.element.querySelector('.task-card-bottom')
+      bottomSection.parentElement.insertBefore(notesSection, bottomSection.nextSibling)
+      
+      // Add expanded class to card
+      this.element.classList.add('expanded')
+      
+      // Focus on textarea
+      setTimeout(() => {
+        notesSection.querySelector('.notes-textarea').focus()
+      }, 100)
+    }
+  }
+
+  async saveNotes(event) {
+    const textarea = event.target
+    const notes = textarea.value
+    
+    try {
+      const taskId = this.element.dataset.taskId
+      const formData = new FormData()
+      formData.append('task[notes]', notes)
+      
+      const response = await fetch(`/tasks/${taskId}`, {
+        method: 'PATCH',
+        body: formData,
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          this.showSaveIndicator()
+        }
+      }
+    } catch (error) {
+      console.error("Error saving notes:", error)
+    }
+  }
+
+  closeNotes(event) {
+    event.preventDefault()
+    
+    // Save notes first
+    const notesSection = this.element.querySelector('.task-notes-section')
+    const textarea = notesSection.querySelector('.notes-textarea')
+    
+    if (textarea.value.trim()) {
+      // Trigger save if there's content
+      this.saveNotes({ target: textarea })
+    }
+    
+    // Hide notes section
+    notesSection.style.display = 'none'
+    this.element.classList.remove('expanded')
+  }
+
+  async completeTask(event) {
+    event.preventDefault()
+    
+    try {
+      const taskId = this.element.dataset.taskId
+      const currentStatus = this.element.dataset.status
+      const taskHTML = this.element.outerHTML
+      
+      // Store undo information
+      this.storeUndoAction('complete', {
+        taskId: taskId,
+        previousStatus: currentStatus,
+        taskHTML: taskHTML,
+        parentSection: this.element.closest('.dashboard-section')
+      })
+      
+      const response = await fetch(`/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+          task: {
+            status: 'completed'
+          }
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          // Remove task card from current section
+          this.element.remove()
+          
+          // Update counters if available
+          if (data.counts && window.DashboardCounters) {
+            window.DashboardCounters.updateCounters(data.counts)
+          }
+          
+          // Reload page to show task in completed section
+          setTimeout(() => {
+            window.location.reload()
+          }, 500)
+        }
+      }
+    } catch (error) {
+      console.error('Error completing task:', error)
+    }
+  }
+
+  storeUndoAction(action, data) {
+    if (!window.UndoManager) {
+      window.UndoManager = {
+        actions: [],
+        maxActions: 10
+      }
+    }
+    
+    window.UndoManager.actions.push({
+      action: action,
+      data: data,
+      timestamp: Date.now()
+    })
+    
+    // Keep only the last 10 actions
+    if (window.UndoManager.actions.length > window.UndoManager.maxActions) {
+      window.UndoManager.actions.shift()
+    }
+  }
+
+  highlightMissingRatings() {
+    const energySelect = this.element.querySelector('select[name="task[energy]"]')
+    const simplicitySelect = this.element.querySelector('select[name="task[simplicity]"]')
+    const impactSelect = this.element.querySelector('select[name="task[impact]"]')
+    
+    // Add red border to fields that are missing values
+    if (!energySelect.value) {
+      energySelect.style.borderColor = '#ef4444'
+    }
+    if (!simplicitySelect.value) {
+      simplicitySelect.style.borderColor = '#ef4444'
+    }
+    if (!impactSelect.value) {
+      impactSelect.style.borderColor = '#ef4444'
+    }
+    
+    // Remove red border after 3 seconds
+    setTimeout(() => {
+      energySelect.style.borderColor = ''
+      simplicitySelect.style.borderColor = ''
+      impactSelect.style.borderColor = ''
+    }, 3000)
   }
 } 
