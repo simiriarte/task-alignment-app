@@ -1,4 +1,4 @@
-<div class="task-card" data-task-id="<%= task.id %>" data-status="<%= task.status %>" data-controller="task-card">
+<div class="task-card" data-task-id="<%= task.id %>" data-status="<%= task.status %>" data-controller="task-card" draggable="true">
   <%= form_with model: task, local: false, 
       data: { 
         task_card_target: "form",

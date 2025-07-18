@@ -78,6 +78,20 @@ export default class extends Controller {
     
     // Insert the new task card at the beginning
     this.taskContainerTarget.insertAdjacentHTML('afterbegin', taskHtml)
+    
+    // Set up drag and drop for the new task card
+    this.setupDragAndDropForNewTask()
+  }
+  
+  setupDragAndDropForNewTask() {
+    // Simple approach: just refresh all drag and drop after a short delay
+    setTimeout(() => {
+      const dashboardGrid = document.querySelector('[data-controller*="drag-drop"]')
+      if (dashboardGrid) {
+        // Dispatch a custom event that the drag-drop controller can listen to
+        dashboardGrid.dispatchEvent(new CustomEvent('refreshDragDrop'))
+      }
+    }, 100)
   }
 
   createTaskContainer() {

@@ -44,6 +44,9 @@ export default class extends Controller {
         case 'delete':
           await this.undoDelete(lastAction.data)
           break
+        case 'drag_drop':
+          await this.undoDragDrop(lastAction.data)
+          break
         default:
           console.log('Unknown action type:', lastAction.action)
       }
@@ -74,6 +77,10 @@ export default class extends Controller {
     // For delete undo, we need to recreate the task
     // This would require storing more data about the task
     console.log('Delete undo not implemented yet')
+  }
+
+  async undoDragDrop(data) {
+    await this.updateTaskStatus(data.taskId, data.previousStatus)
   }
 
   async updateTaskStatus(taskId, status) {

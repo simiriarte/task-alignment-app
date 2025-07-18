@@ -2177,4 +2177,43 @@ body {
   }
 }
 
+/* Drag and Drop Styles */
+.task-card.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
+  z-index: 1000;
+}
+
+.dashboard-section.valid-drop-zone {
+  background-color: #f0f9ff;
+  border: 2px dashed #0ea5e9;
+  transition: all 0.2s ease;
+}
+
+.dashboard-section.drag-over {
+  background-color: #e0f2fe;
+  border: 2px solid #0ea5e9;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+}
+
+.dashboard-section {
+  transition: all 0.2s ease;
+}
+
+/* Drag cursor for draggable items */
+.task-card[draggable="true"] {
+  cursor: grab;
+}
+
+.task-card[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+/* Shake animation for invalid drops */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+  20%, 40%, 60%, 80% { transform: translateX(3px); }
+}
 
