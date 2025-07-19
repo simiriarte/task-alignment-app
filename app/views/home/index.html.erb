@@ -47,13 +47,22 @@
         </div>
         <div class="profile-menu">
           <a href="#" class="profile-menu-item" id="profileMenuTrigger">
-            <span class="profile-menu-label">Profile</span>
+            <span class="nav-icon">
+              <%= user_icon(css_class: "icon") %>
+            </span>
+            <span class="nav-label">Profile</span>
           </a>
           <%= link_to "#", class: "profile-menu-item" do %>
-            <span class="profile-menu-label">Settings</span>
+            <span class="nav-icon">
+              <%= settings_icon(css_class: "icon") %>
+            </span>
+            <span class="nav-label">Settings</span>
           <% end %>
           <%= link_to destroy_user_session_path, data: { turbo_method: :delete }, class: "profile-menu-item" do %>
-            <span class="profile-menu-label">Sign Out</span>
+            <span class="nav-icon">
+              <%= logout_icon(css_class: "icon") %>
+            </span>
+            <span class="nav-label">Sign Out</span>
           <% end %>
         </div>
       </div>
@@ -75,14 +84,14 @@
 
       <!-- Action Section -->
       <div class="action-section">
-        <%= link_to "Create Your First Task", tasks_path, class: "btn btn-primary btn-large btn-rounded" %>
+        <%= link_to "Create Your First Task", tasks_path, class: "btn btn-large", style: "background-color: #ff8900; color: white; border-radius: 50px; border: none; padding: 12px 32px; font-weight: 500; text-decoration: none; display: inline-block; transition: all 0.2s ease;" %>
       </div>
 
       <!-- Coming Soon Features -->
       <div class="coming-soon-section">
         <div class="coming-soon-accordion">
-          <div class="accordion-header">
-            <h2 class="accordion-title">Coming Soon</h2>
+          <div class="accordion-header" style="background: linear-gradient(135deg, #0097f2 0%, #0084d1 100%); color: white; border-radius: 8px 8px 0 0; padding: 16px;">
+            <h2 class="accordion-title" style="color: white; margin: 0;">Coming Soon</h2>
           </div>
           
           <div class="accordion-content">
@@ -336,183 +345,3 @@
   });
 </script>
 
-<%# Icon System Demo Section %>
-<div class="max-w-4xl mx-auto px-4 py-6">
-  <div class="icon-demo-section" style="margin-bottom: 40px;">
-    <h2>🎨 Icon System Demo</h2>
-    <p>Here's how to use all the available icons in your templates:</p>
-    
-    <%# Basic Icon Usage %>
-    <div class="demo-block" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-      <h3>Basic Icon Usage</h3>
-      <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 20px;">
-        <%= plus_icon %> plus_icon
-        <%= edit_icon %> edit_icon
-        <%= calendar_icon %> calendar_icon
-        <%= document_icon %> document_icon
-        <%= delete_icon %> delete_icon
-        <%= check_icon %> check_icon
-        <%= star_icon %> star_icon
-        <%= user_icon %> user_icon
-        <%= settings_icon %> settings_icon
-        <%= home_icon %> home_icon
-      </div>
-      <code style="background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-size: 14px;">
-        &lt;%= plus_icon %&gt; &lt;%= edit_icon %&gt; &lt;%= calendar_icon %&gt;
-      </code>
-    </div>
-
-    <%# Icon Sizes %>
-    <div class="demo-block" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-      <h3>Icon Sizes</h3>
-      <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 20px;">
-        <%= edit_icon(size: :xs) %> xs
-        <%= edit_icon(size: :sm) %> sm
-        <%= edit_icon(size: :md) %> md
-        <%= edit_icon(size: :lg) %> lg
-        <%= edit_icon(size: :xl) %> xl
-        <%= edit_icon(size: :"2xl") %> 2xl
-      </div>
-      <code style="background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-size: 14px;">
-        &lt;%= edit_icon(size: :xs) %&gt; &lt;%= edit_icon(size: :lg) %&gt;
-      </code>
-    </div>
-
-    <%# Icon Colors %>
-    <div class="demo-block" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-      <h3>Icon Colors</h3>
-      <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 20px;">
-        <%= star_icon(css_class: "icon-primary") %> primary
-        <%= star_icon(css_class: "icon-accent") %> accent
-        <%= star_icon(css_class: "icon-success") %> success
-        <%= star_icon(css_class: "icon-warning") %> warning
-        <%= star_icon(css_class: "icon-error") %> error
-        <%= star_icon(css_class: "icon-muted") %> muted
-      </div>
-      <code style="background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-size: 14px;">
-        &lt;%= star_icon(css_class: "icon-primary") %&gt;
-      </code>
-    </div>
-
-    <%# Icon Buttons %>
-    <div class="demo-block" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-      <h3>Icon Buttons</h3>
-      <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 20px;">
-        <button class="btn-icon">
-          <%= edit_icon %>
-        </button>
-        <button class="btn-icon btn-icon-primary">
-          <%= plus_icon %>
-        </button>
-        <button class="btn-icon btn-icon-accent">
-          <%= star_icon %>
-        </button>
-        <button class="btn-icon btn-icon-danger">
-          <%= delete_icon %>
-        </button>
-      </div>
-      <code style="background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-size: 14px;">
-        &lt;button class="btn-icon btn-icon-primary"&gt;&lt;%= plus_icon %&gt;&lt;/button&gt;
-      </code>
-    </div>
-
-    <%# Text with Icons %>
-    <div class="demo-block" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-      <h3>Text with Icons</h3>
-      <div style="margin-bottom: 20px;">
-        <div class="icon-with-text" style="margin-bottom: 10px;">
-          <%= plus_icon %> Add New Task
-        </div>
-        <div class="icon-with-text" style="margin-bottom: 10px;">
-          <%= calendar_icon %> Schedule Meeting
-        </div>
-        <div class="icon-with-text" style="margin-bottom: 10px;">
-          <%= document_icon %> View Document
-        </div>
-      </div>
-      <code style="background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-size: 14px;">
-        &lt;div class="icon-with-text"&gt;&lt;%= plus_icon %&gt; Add New Task&lt;/div&gt;
-      </code>
-    </div>
-
-    <%# Buttons with Icons %>
-    <div class="demo-block" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-      <h3>Buttons with Icons</h3>
-      <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 20px;">
-        <button class="btn btn-primary">
-          <%= plus_icon %> Add Task
-        </button>
-        <button class="btn btn-outline">
-          <%= edit_icon %> Edit
-        </button>
-        <button class="btn btn-outline">
-          <%= calendar_icon %> Schedule
-        </button>
-      </div>
-      <code style="background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-size: 14px;">
-        &lt;button class="btn btn-primary"&gt;&lt;%= plus_icon %&gt; Add Task&lt;/button&gt;
-      </code>
-    </div>
-
-    <%# All Available Icons %>
-    <div class="demo-block" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-      <h3>All Available Icons</h3>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 20px;">
-        <% [
-          { name: "plus_icon", icon: plus_icon },
-          { name: "edit_icon", icon: edit_icon },
-          { name: "calendar_icon", icon: calendar_icon },
-          { name: "document_icon", icon: document_icon },
-          { name: "chevron_right_icon", icon: chevron_right_icon },
-          { name: "chevron_down_icon", icon: chevron_down_icon },
-          { name: "chevron_left_icon", icon: chevron_left_icon },
-          { name: "delete_icon", icon: delete_icon },
-          { name: "check_icon", icon: check_icon },
-          { name: "star_icon", icon: star_icon },
-          { name: "user_icon", icon: user_icon },
-          { name: "settings_icon", icon: settings_icon },
-          { name: "home_icon", icon: home_icon },
-          { name: "menu_icon", icon: menu_icon },
-          { name: "close_icon", icon: close_icon },
-          { name: "search_icon", icon: search_icon },
-          { name: "filter_icon", icon: filter_icon },
-          { name: "sort_icon", icon: sort_icon },
-          { name: "notification_icon", icon: notification_icon },
-          { name: "eye_icon", icon: eye_icon },
-          { name: "link_icon", icon: link_icon },
-          { name: "clock_icon", icon: clock_icon },
-          { name: "folder_icon", icon: folder_icon },
-          { name: "tag_icon", icon: tag_icon },
-          { name: "flag_icon", icon: flag_icon },
-          { name: "archive_icon", icon: archive_icon },
-          { name: "download_icon", icon: download_icon },
-          { name: "upload_icon", icon: upload_icon },
-          { name: "share_icon", icon: share_icon },
-          { name: "copy_icon", icon: copy_icon },
-          { name: "heart_icon", icon: heart_icon },
-          { name: "info_icon", icon: info_icon },
-          { name: "warning_icon", icon: warning_icon },
-          { name: "error_icon", icon: error_icon },
-          { name: "success_icon", icon: success_icon }
-        ].each do |item| %>
-          <div class="icon-with-text" style="font-size: 14px; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
-            <%= item[:icon] %> <%= item[:name] %>
-          </div>
-        <% end %>
-      </div>
-    </div>
-
-    <%# Usage Instructions %>
-    <div class="demo-block" style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #4299e1;">
-      <h3>How to Use</h3>
-      <ul style="margin-left: 20px; line-height: 1.6;">
-        <li><strong>Basic usage:</strong> <code>&lt;%= plus_icon %&gt;</code></li>
-        <li><strong>With size:</strong> <code>&lt;%= plus_icon(size: :lg) %&gt;</code></li>
-        <li><strong>With color:</strong> <code>&lt;%= plus_icon(css_class: "icon-primary") %&gt;</code></li>
-        <li><strong>With custom class:</strong> <code>&lt;%= plus_icon(css_class: "my-custom-class") %&gt;</code></li>
-        <li><strong>Direct icon usage:</strong> <code>&lt;%= icon("heart", variant: :solid, size: :lg) %&gt;</code></li>
-        <li><strong>With text:</strong> Wrap in <code>&lt;div class="icon-with-text"&gt;</code></li>
-      </ul>
-    </div>
-  </div>
-</div>

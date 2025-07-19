@@ -146,8 +146,6 @@ body {
   max-height: 0;
   overflow: visible;
   transition: all 0.3s ease;
-  background: var(--primary-color);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .nav-profile:hover .profile-menu {
@@ -159,17 +157,19 @@ body {
 .profile-menu-item {
   position: relative;
   display: block;
-  padding: 10px 16px;
-  color: rgba(255, 255, 255, 0.8);
+  padding: 10px;
+  margin: 0 8px;
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  transition: background-color 0.2s ease;
-  min-height: 32px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  min-height: 36px;
   box-sizing: border-box;
 }
 
 .profile-menu-item:hover {
-  background-color: rgba(0, 0, 0, 0.2);
-  color: rgba(255, 255, 255, 0.95);
+  background-color: var(--primary-hover);
+  color: rgba(255, 255, 255, 1);
 }
 
 .profile-menu-item:last-child {
@@ -199,8 +199,17 @@ body {
   transition: opacity 0.3s ease;
 }
 
-.dashboard-nav:hover .profile-menu-label {
+.dashboard-nav:hover .profile-menu .nav-label {
   opacity: 1;
+}
+
+.dashboard-nav:hover .profile-menu-item {
+  padding: 10px 16px;
+}
+
+.dashboard-nav:hover .profile-menu .nav-icon {
+  left: 16px;
+  transform: translate(0, -50%);
 }
 
 /* Wins Sidebar with Complex Animation */
@@ -212,10 +221,15 @@ body {
   width: 0;
   background: var(--surface-color);
   box-shadow: -3px 0 12px rgba(0, 0, 0, 0.08);
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, opacity 0.3s ease;
   z-index: 1000;
   overflow: hidden;
   border-left: 1px solid var(--border-color);
+  opacity: 0;
+}
+
+.wins-sidebar.wins-ready {
+  opacity: 1;
 }
 
 .wins-sidebar.open {
@@ -457,12 +471,17 @@ body {
   padding: 20px;
   height: 100vh;
   overflow: hidden;
-  transition: margin-left 0.3s ease;
+  transition: margin-left 0.3s ease, margin-right 0.3s ease;
   box-sizing: border-box;
 }
 
 .main-content.wins-open {
   margin-right: 280px;
+}
+
+/* Prevent layout jolt during page reload by checking localStorage directly in CSS */
+.main-content:not(.wins-ready) {
+  transition: none;
 }
 
 /* Dashboard Container */
@@ -719,6 +738,180 @@ body {
   display: block;
 }
 
+/* Profile Modal Header */
+.profile-modal-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #4a3b5c 100%);
+  padding: 20px 24px;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-modal-title {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.profile-modal-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.profile-modal-close svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+/* Profile Modal Content */
+.profile-modal-content {
+  padding: 24px;
+}
+
+.profile-photo-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 24px auto;
+  border-radius: 60px;
+  overflow: hidden;
+  background: var(--background-color);
+  border: 3px solid var(--border-light);
+  position: relative;
+}
+
+.profile-photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-photo-preview-placeholder {
+  width: 48px;
+  height: 48px;
+  color: var(--text-muted);
+  stroke: currentColor;
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.profile-photo-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.profile-photo-input {
+  display: none;
+}
+
+.profile-photo-button {
+  padding: 12px 24px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: white;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Figtree', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.profile-photo-button:hover {
+  background: var(--background-color);
+  border-color: var(--accent-color);
+}
+
+.profile-photo-button.secondary {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.profile-photo-button.secondary:hover {
+  background: #fecaca;
+  border-color: #dc2626;
+}
+
+/* Profile Modal Actions */
+.profile-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-light);
+}
+
+.btn-cancel {
+  padding: 12px 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: white;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Figtree', sans-serif;
+}
+
+.btn-cancel:hover {
+  background: var(--background-color);
+  border-color: var(--text-muted);
+}
+
+.btn-save {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary-color);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Figtree', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-save:hover {
+  background: var(--primary-hover);
+}
+
+.btn-save:disabled {
+  background: var(--text-muted);
+  cursor: not-allowed;
+}
+
 /* Calendar Modal with Grid */
 .calendar-modal {
   background: var(--surface-color);
@@ -913,7 +1106,7 @@ body {
   max-height: 102px;
   display: flex;
   flex-direction: column;
-  transition: max-height 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .task-card.expanded {
@@ -2178,36 +2371,57 @@ body {
 }
 
 /* Drag and Drop Styles */
-.task-card.dragging {
-  opacity: 0.5;
-  transform: rotate(5deg);
-  z-index: 1000;
-}
 
 .dashboard-section.valid-drop-zone {
   background-color: #f0f9ff;
   border: 2px dashed #0ea5e9;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(1.01);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
 }
 
 .dashboard-section.drag-over {
   background-color: #e0f2fe;
   border: 2px solid #0ea5e9;
-  transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+  transform: scale(1.03);
+  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.25);
 }
 
 .dashboard-section {
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Drag cursor for draggable items */
 .task-card[draggable="true"] {
   cursor: grab;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s ease-out;
+}
+
+.task-card[draggable="true"]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .task-card[draggable="true"]:active {
   cursor: grabbing;
+}
+
+.task-card.dragging {
+  opacity: 0.7;
+  z-index: 1000;
+  transition: opacity 0.2s ease-out;
+}
+
+.task-card.dragging:hover,
+.task-card.drag-released:hover {
+  transform: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.task-card.drag-released {
+  pointer-events: none;
 }
 
 /* Shake animation for invalid drops */

@@ -74,6 +74,12 @@ export default class extends Controller {
     const taskCard = event.target.closest('.task-card')
     if (taskCard) {
       taskCard.classList.remove('dragging')
+      taskCard.classList.add('drag-released')
+      
+      // Remove hover-disable class after transition completes
+      setTimeout(() => {
+        taskCard.classList.remove('drag-released')
+      }, 350)
     }
     
     // Remove all drop zone highlights
@@ -230,6 +236,10 @@ export default class extends Controller {
       newStatus: newStatus
     } : null
 
+    // Store draggedTask data before async operation since it might be cleared
+    const taskElement = this.draggedTask ? this.draggedTask.element : null
+    const currentStatus = this.draggedTask ? this.draggedTask.currentStatus : null
+
     try {
       const response = await fetch(`/tasks/${taskId}`, {
         method: 'PATCH',
@@ -254,8 +264,11 @@ export default class extends Controller {
             this.storeUndoActionWithData(undoData)
           }
           
-          // Reload page to show task in correct section
-          window.location.reload()
+          // Move task card to correct section without page reload
+          this.moveTaskCardToSection(taskElement, newStatus, currentStatus)
+          
+          // Update section counters
+          this.updateSectionCounters()
         }
       }
     } catch (error) {
@@ -418,6 +431,69 @@ export default class extends Controller {
       taskCard.draggable = true
       taskCard.addEventListener('dragstart', this.handleDragStart.bind(this))
       taskCard.addEventListener('dragend', this.handleDragEnd.bind(this))
+    }
+  }
+
+  moveTaskCardToSection(taskCard, newStatus, currentStatus) {
+    if (!taskCard) {
+      console.error('Task card is null, cannot move')
+      return
+    }
+
+    // Find the target section
+    const targetSection = document.querySelector(`[data-status="${newStatus}"] .task-cards-container`)
+    if (!targetSection) {
+      console.error('Target section not found for status:', newStatus)
+      return
+    }
+
+    // Update task card's data-status attribute
+    taskCard.dataset.status = newStatus
+
+    // Hide empty state in target section if it exists
+    const targetEmptyState = targetSection.parentElement.querySelector('.section-empty-state')
+    if (targetEmptyState) {
+      targetEmptyState.style.display = 'none'
+    }
+
+    // Move the task card to the target section
+    targetSection.appendChild(taskCard)
+
+    // Check if source section is now empty and show empty state
+    const sourceSection = document.querySelector(`[data-status="${currentStatus}"] .task-cards-container`)
+    if (sourceSection && sourceSection.children.length === 0) {
+      const sourceEmptyState = sourceSection.parentElement.querySelector('.section-empty-state')
+      if (sourceEmptyState) {
+        sourceEmptyState.style.display = 'block'
+      }
+    }
+
+    console.log(`Task moved from ${currentStatus} to ${newStatus}`)
+  }
+
+  updateSectionCounters() {
+    // Update counters for each section
+    const sections = ['unrated', 'rated', 'parked', 'completed']
+    
+    sections.forEach(status => {
+      const container = document.querySelector(`[data-status="${status}"] .task-cards-container`)
+      const counter = document.querySelector(`[data-status="${status}"] .section-count`)
+      
+      if (container && counter) {
+        const count = container.children.length
+        const label = this.getCounterLabel(status, count)
+        counter.textContent = `${count} ${label}`
+      }
+    })
+  }
+
+  getCounterLabel(status, count) {
+    switch (status) {
+      case 'unrated': return 'unfiltered'
+      case 'rated': return 'prioritized'
+      case 'parked': return 'parked'
+      case 'completed': return 'completed'
+      default: return ''
     }
   }
 }

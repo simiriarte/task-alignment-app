@@ -150,6 +150,10 @@ function initializeWinsSidebar() {
   function toggleSidebar() {
     winsSidebar.classList.toggle('open');
     mainContent.classList.toggle('wins-open');
+    
+    // Store current state in localStorage for persistence across page reloads
+    const isOpen = winsSidebar.classList.contains('open');
+    localStorage.setItem('winsPanelOpen', isOpen ? 'true' : 'false');
   }
   
   // Event listeners
@@ -164,8 +168,20 @@ function initializeWinsSidebar() {
     }
   });
   
+  // Restore wins panel state from localStorage
+  const shouldBeOpen = localStorage.getItem('winsPanelOpen') === 'true';
+  if (shouldBeOpen) {
+    console.log('Restoring wins panel to open state');
+    winsSidebar.classList.add('open');
+    mainContent.classList.add('wins-open');
+  }
+  
   // Load wins on page load
   loadWins();
+  
+  // Make wins sidebar visible after state restoration is complete
+  winsSidebar.classList.add('wins-ready');
+  mainContent.classList.add('wins-ready');
   
   // Mark as initialized
   winsSidebar.dataset.initialized = 'true';
