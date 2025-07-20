@@ -57,6 +57,9 @@ export default class extends Controller {
     console.log('Has Ratings:', this.draggedTask.hasRatings)
     console.log('========================')
 
+    // Prevent scrollbars during drag
+    document.body.classList.add('dragging-active')
+
     // Add visual feedback
     taskCard.classList.add('dragging')
     
@@ -81,6 +84,9 @@ export default class extends Controller {
         taskCard.classList.remove('drag-released')
       }, 350)
     }
+    
+    // Re-enable scrollbars after drag
+    document.body.classList.remove('dragging-active')
     
     // Remove all drop zone highlights
     this.removeAllDropZoneHighlights()
@@ -288,9 +294,15 @@ export default class extends Controller {
     console.log('Impact select found:', !!impactSelect, impactSelect?.value)
     
     if (!energySelect || !simplicitySelect || !impactSelect) {
-      // If selects don't exist, task is already rated (showing date display)
-      console.log('No selects found - assuming already rated: TRUE')
-      return true
+      // If selects don't exist, check if task has score display (already rated)
+      const scoreDisplay = taskCard.querySelector('.task-score-badge') || taskCard.querySelector('.score-container')
+      if (scoreDisplay) {
+        console.log('No selects found but score display exists - already rated: TRUE')
+        return true
+      } else {
+        console.log('No selects and no score display - not rated: FALSE')
+        return false
+      }
     }
     
     const hasRatings = !!(energySelect.value && simplicitySelect.value && impactSelect.value)

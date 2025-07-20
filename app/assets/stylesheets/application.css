@@ -493,9 +493,12 @@ body {
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: var(--row1-height, 1fr) var(--row2-height, 1fr);
   gap: 24px;
   margin-top: 20px;
-  height: calc(100vh - 160px);
+  min-height: calc(100vh - 160px);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .dashboard-section {
@@ -507,11 +510,9 @@ body {
   padding: 20px;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-light);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  max-height: 100%;
-  overflow: hidden;
+  position: relative;
+  min-height: 150px;
+  max-height: 1500px;
 }
 
 .dashboard-section.section-dimmed {
@@ -525,6 +526,32 @@ body {
 
 .dashboard-section.section-active {
   opacity: 1;
+}
+
+/* Resize Handles - Only Vertical */
+.resize-handle {
+  position: absolute;
+  background: transparent;
+  z-index: 10;
+  transition: background-color 0.2s ease;
+}
+
+.resize-handle:hover {
+  background: rgba(66, 153, 225, 0.3);
+}
+
+.resize-handle-vertical {
+  left: 0;
+  right: 0;
+  bottom: -12px;
+  height: 24px;
+  cursor: row-resize;
+}
+
+/* Hide horizontal and corner handles - only vertical resizing allowed */
+.resize-handle-horizontal,
+.resize-handle-corner {
+  display: none;
 }
 
 .create-task-icon {
@@ -2372,19 +2399,40 @@ body {
 
 /* Drag and Drop Styles */
 
+/* Prevent scrollbars during drag operations */
+body.dragging-active {
+  overflow: hidden;
+}
+
+body.dragging-active .main-content {
+  overflow: hidden;
+}
+
+body.dragging-active .dashboard-grid {
+  overflow: hidden;
+}
+
+body.dragging-active .section-content {
+  overflow: hidden;
+}
+
+body.dragging-active .task-cards-container {
+  overflow: hidden;
+}
+
 .dashboard-section.valid-drop-zone {
   background-color: #f0f9ff;
-  border: 2px dashed #0ea5e9;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: scale(1.01);
+  border: 1px dashed #0ea5e9;
   box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
+  border-radius: 12px;
 }
 
 .dashboard-section.drag-over {
   background-color: #e0f2fe;
-  border: 2px solid #0ea5e9;
-  transform: scale(1.03);
+  border: 2px dashed #0ea5e9;
   box-shadow: 0 6px 16px rgba(14, 165, 233, 0.25);
+  border-radius: 12px;
 }
 
 .dashboard-section {

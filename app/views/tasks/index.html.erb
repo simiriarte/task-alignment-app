@@ -86,13 +86,14 @@
     </div>
 
     <!-- Dashboard Grid -->
-    <div class="dashboard-grid" data-controller="dashboard-counters drag-drop">
+    <div class="dashboard-grid" data-controller="dashboard-counters drag-drop resizable-dashboard" data-resizable-dashboard-target="grid">
       
       <!-- Top Left: Filter Tasks (Always Active) -->
       <div class="dashboard-section filter-tasks section-active" 
            data-controller="filter-tasks" 
            data-filter-tasks-url-value="<%= tasks_path %>"
-           data-drag-drop-target="dropZone" data-status="unrated">
+           data-drag-drop-target="dropZone" data-status="unrated"
+           data-resizable-dashboard-target="section">
         <div class="section-header">
           <h2 class="section-title">Filter Tasks</h2>
           <div class="section-header-right">
@@ -140,7 +141,8 @@
 
       <!-- Top Right: Prioritized Tasks -->
       <div class="dashboard-section prioritized-tasks <%= 'section-dimmed' unless @has_rated_tasks %>" 
-           data-drag-drop-target="dropZone" data-status="rated">
+           data-drag-drop-target="dropZone" data-status="rated"
+           data-resizable-dashboard-target="section">
         <div class="section-header">
           <h2 class="section-title">Prioritized Tasks</h2>
           <div class="section-count" data-dashboard-counters-target="ratedCounter"><%= @rated_count %> prioritized</div>
@@ -179,7 +181,8 @@
 
       <!-- Bottom Left: Parked Tasks -->
       <div class="dashboard-section parked-tasks <%= 'section-dimmed' unless @has_parked_tasks %>" 
-           data-drag-drop-target="dropZone" data-status="parked">
+           data-drag-drop-target="dropZone" data-status="parked"
+           data-resizable-dashboard-target="section">
         <div class="section-header">
           <h2 class="section-title">Parked Tasks</h2>
           <div class="section-count" data-dashboard-counters-target="parkedCounter"><%= @parked_count %> parked</div>
@@ -211,7 +214,8 @@
 
       <!-- Bottom Right: Completed Tasks -->
       <div class="dashboard-section completed-tasks <%= 'section-dimmed' unless @has_completed_tasks %>" 
-           data-drag-drop-target="dropZone" data-status="completed">
+           data-drag-drop-target="dropZone" data-status="completed"
+           data-resizable-dashboard-target="section">
         <div class="section-header">
           <h2 class="section-title">Completed Tasks</h2>
           <div class="section-count" data-dashboard-counters-target="completedCounter"><%= @completed_count %> completed</div>
