@@ -284,6 +284,121 @@ class TasksController < ApplicationController
     end
   end
 
+  # POST /tasks/:id/subtasks
+  def subtasks
+    @parent_task = current_user.tasks.find(params[:id])
+    subtask_text = params[:subtask_text]
+    
+    if subtask_text.blank?
+      respond_to do |format|
+        format.json { render json: { success: false, error: "Please enter some text to create subtasks from." } }
+      end
+      return
+    end
+
+    # Split by newlines and reject blank lines
+    subtask_lines = subtask_text.split("\n").map(&:strip).reject(&:blank?)
+    
+    if subtask_lines.empty?
+      respond_to do |format|
+        format.json { render json: { success: false, error: "No valid subtask lines found." } }
+      end
+      return
+    end
+
+    created_count = 0
+    failed_subtasks = []
+    created_subtasks = []
+
+    subtask_lines.each do |line|
+      subtask = current_user.tasks.build(
+        title: line,
+        status: "unrated",
+        energy: nil,
+        simplicity: nil,
+        impact: nil,
+        cognitive_density: 0,
+        estimated_hours: 0,
+        parent_task: @parent_task
+      )
+      
+      if subtask.save
+        created_count += 1
+        created_subtasks << subtask
+      else
+        failed_subtasks << { title: line, errors: subtask.errors.full_messages }
+      end
+    end
+
+    if created_count > 0
+      respond_to do |format|
+        format.json {
+          render json: {
+            success: true,
+            message: "Created #{created_count} subtask#{created_count > 1 ? 's' : ''}",
+            subtasks: created_subtasks.map { |subtask| 
+              subtask.as_json(only: [:id, :title, :status, :parent_task_id]) 
+            },
+            failed: failed_subtasks
+          }
+        }
+      end
+    else
+      error_message = failed_subtasks.any? ? 
+        "Failed to create subtasks: #{failed_subtasks.map { |f| f[:errors] }.flatten.join(', ')}" :
+        "No subtasks were created."
+      
+      respond_to do |format|
+        format.json { render json: { success: false, error: error_message } }
+      end
+    end
+  rescue => e
+    error_message = "An error occurred while creating subtasks: #{e.message}"
+    respond_to do |format|
+      format.json { render json: { success: false, error: error_message } }
+    end
+  end
+
+  # POST /tasks/:id/add_subtask
+  def add_subtask
+    @parent_task = current_user.tasks.find(params[:id])
+    
+    # Create a new blank subtask
+    @subtask = current_user.tasks.build(
+      title: "New subtask",
+      status: "unrated",
+      energy: nil,
+      simplicity: nil,
+      impact: nil,
+      cognitive_density: 0,
+      estimated_hours: 0,
+      parent_task: @parent_task
+    )
+
+    if @subtask.save
+      respond_to do |format|
+        format.json {
+          # Return the updated parent task card HTML
+          task_html = render_to_string(partial: "task_card", locals: { task: @parent_task }, formats: [:html])
+          render json: {
+            success: true,
+            message: "Subtask added",
+            subtask: @subtask.as_json(only: [:id, :title, :status, :parent_task_id]),
+            task_html: task_html
+          }
+        }
+      end
+    else
+      respond_to do |format|
+        format.json { render json: { success: false, error: @subtask.errors.full_messages.join(', ') } }
+      end
+    end
+  rescue => e
+    respond_to do |format|
+      format.json { render json: { success: false, error: "An error occurred while adding subtask: #{e.message}" } }
+    end
+  end
+
   private
 
   # Use callbacks to share common setup or constraints between actions.

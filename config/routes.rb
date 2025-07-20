@@ -8,6 +8,8 @@ Rails.application.routes.draw do
     end
     member do
       post :duplicate
+      post :subtasks
+      post :add_subtask
     end
   end
 

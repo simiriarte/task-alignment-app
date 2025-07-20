@@ -146,11 +146,14 @@
       
       <!-- Action Buttons -->
       <div class="card-actions">
-        <button type="button" class="card-action-btn" title="Add subtask">
+        <button type="button" class="card-action-btn" title="Add subtask"
+                data-action="click->task-card#addSingleSubtask"
+                data-task-id="<%= task.id %>">
           <%= plus_icon(size: :sm) %>
         </button>
-        <button type="button" class="card-action-btn" title="Unpack task" 
-                data-action="click->brain-dump#openModal">
+        <button type="button" class="card-action-btn" title="Add multiple subtasks" 
+                data-action="click->task-card#addMultipleSubtasks"
+                data-task-id="<%= task.id %>">
           <%= chevron_down_icon(size: :sm) %>
         </button>
         <button type="button" class="card-action-btn park-btn" 
@@ -176,5 +179,29 @@
     <%= form.hidden_field :cognitive_density, data: { task_card_target: "cognitiveDensityInput" } %>
     <%= form.hidden_field :estimated_hours, data: { task_card_target: "estimatedHoursInput" } %>
     
+  <% end %>
+  
+  <!-- Subtasks Section -->
+  <% if task.has_subtasks? %>
+    <div class="subtasks-section" data-task-card-target="subtasksSection">
+      <div class="subtasks-list">
+        <% task.subtasks.each do |subtask| %>
+          <div class="subtask-item" data-subtask-id="<%= subtask.id %>">
+            <div class="subtask-checkbox">
+              <input type="checkbox" 
+                     class="subtask-complete-checkbox"
+                     data-action="change->task-card#toggleSubtaskComplete"
+                     data-subtask-id="<%= subtask.id %>"
+                     <%= 'checked' if subtask.status == 'completed' %>>
+            </div>
+            <div class="subtask-content">
+              <span class="subtask-title <%= 'completed' if subtask.status == 'completed' %>">
+                <%= subtask.title %>
+              </span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
   <% end %>
 </div> 

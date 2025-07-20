@@ -469,10 +469,18 @@ body {
 .main-content {
   margin-left: 70px;
   padding: 20px;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   transition: margin-left 0.3s ease, margin-right 0.3s ease;
   box-sizing: border-box;
+  /* Hide scrollbars but maintain functionality */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.main-content::-webkit-scrollbar {
+  display: none;
 }
 
 .main-content.wins-open {
@@ -497,8 +505,7 @@ body {
   gap: 24px;
   margin-top: 20px;
   min-height: calc(100vh - 160px);
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: visible;
 }
 
 .dashboard-section {
@@ -513,6 +520,21 @@ body {
   position: relative;
   min-height: 150px;
   max-height: 1500px;
+}
+
+/* Subtle fade effect at bottom inner edge of dashboard sections */
+.dashboard-section::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(to bottom, transparent, var(--surface-color));
+  pointer-events: none;
+  opacity: 0.8;
+  z-index: 2;
+  border-radius: 0 0 12px 12px;
 }
 
 .dashboard-section.section-dimmed {
@@ -546,6 +568,35 @@ body {
   bottom: -12px;
   height: 24px;
   cursor: row-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Visual indicator lines for resize handle */
+.resize-handle-vertical::before,
+.resize-handle-vertical::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 1px;
+  transition: all 0.2s ease;
+}
+
+.resize-handle-vertical::before {
+  top: 8px;
+}
+
+.resize-handle-vertical::after {
+  top: 14px;
+}
+
+.resize-handle-vertical:hover::before,
+.resize-handle-vertical:hover::after {
+  background: rgba(66, 153, 225, 0.8);
+  width: 24px;
 }
 
 /* Hide horizontal and corner handles - only vertical resizing allowed */
@@ -2349,8 +2400,15 @@ body {
   
   .main-content {
     margin-left: 60px;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .main-content::-webkit-scrollbar {
+    display: none;
   }
   
   .dashboard-grid {
@@ -2399,7 +2457,7 @@ body {
 
 /* Drag and Drop Styles */
 
-/* Prevent scrollbars during drag operations */
+/* Prevent scrolling during drag operations */
 body.dragging-active {
   overflow: hidden;
 }
@@ -2477,5 +2535,62 @@ body.dragging-active .task-cards-container {
   0%, 100% { transform: translateX(0); }
   10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
   20%, 40%, 60%, 80% { transform: translateX(3px); }
+}
+
+/* Subtask Styles */
+.subtasks-section {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+  background: rgba(249, 250, 251, 0.5);
+  margin-left: -10px;
+  margin-right: -10px;
+  margin-bottom: -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-bottom: 8px;
+}
+
+.subtasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.subtask-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.subtask-checkbox {
+  flex-shrink: 0;
+}
+
+.subtask-complete-checkbox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.subtask-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.subtask-title {
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.3;
+  display: block;
+  word-break: break-word;
+}
+
+.subtask-title.completed {
+  text-decoration: line-through;
+  color: var(--text-muted);
 }
 

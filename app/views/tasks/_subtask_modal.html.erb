@@ -1,0 +1,66 @@
+<!-- Subtask Modal -->
+<div data-action="keydown@window->subtask#handleKeydown">
+  
+  <!-- Modal Backdrop -->
+  <div class="brain-dump-backdrop" 
+       data-subtask-target="backdrop"
+       data-action="click->subtask#handleBackdropClick">
+  </div>
+  
+  <div class="brain-dump-modal" 
+       data-subtask-target="modal">
+    <div class="profile-modal-header">
+      <h3 class="profile-modal-title">Add Subtasks</h3>
+      <button class="profile-modal-close" 
+              data-action="click->subtask#closeModal">
+        <%= close_icon(css_class: "icon") %>
+      </button>
+    </div>
+    <div class="profile-modal-content">
+      <%= form_with url: "#", 
+          method: :post, 
+          local: false,
+          data: { 
+            subtask_target: "form",
+            action: "submit->subtask#submitForm"
+          } do |form| %>
+        
+        <div data-subtask-target="errors" 
+             class="brain-dump-errors" 
+             style="display: none;">
+        </div>
+        
+        <div class="brain-dump-input-container">
+          <label for="subtask_text" class="brain-dump-label">
+            Enter one subtask per line:
+          </label>
+          <%= form.text_area :subtask_text, 
+              rows: 6, 
+              placeholder: "Research topic\nWrite outline\nCreate first draft\nReview and edit", 
+              class: "brain-dump-textarea",
+              data: { subtask_target: "textarea" },
+              required: true %>
+          <p class="brain-dump-help">
+            Each line will become a subtask of the current task. Empty lines will be ignored.
+          </p>
+        </div>
+        
+        <%= form.hidden_field :parent_task_id, data: { subtask_target: "parentTaskId" } %>
+        
+        <div class="profile-modal-actions">
+          <div class="keyboard-hint">
+            <kbd>⌘</kbd><kbd>Enter</kbd> to submit
+          </div>
+          <button type="button" 
+                  class="btn-cancel" 
+                  data-action="click->subtask#closeModal">
+            Cancel
+          </button>
+          <%= form.submit "Create Subtasks", 
+              class: "btn-save", 
+              data: { subtask_target: "submitButton" } %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -393,10 +393,59 @@ export default class extends Controller {
     this.element.classList.toggle('expanded')
   }
 
-  addSubtask(event) {
+  // Add a single subtask directly
+  async addSingleSubtask(event) {
     event.preventDefault()
-    // This could be implemented later for subtask functionality
-    this.showSuccessMessage("Subtask functionality coming soon!")
+    
+    const taskId = this.element.dataset.taskId
+    if (!taskId) {
+      console.error('Task ID not found')
+      return
+    }
+
+    try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      
+      const response = await fetch(`/tasks/${taskId}/add_subtask`, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': csrfToken,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Replace the task card with updated HTML
+        this.element.outerHTML = data.task_html
+        this.showSuccessMessage('Subtask added')
+      } else {
+        this.showError(data.error || 'Failed to add subtask')
+      }
+    } catch (error) {
+      console.error('Error adding subtask:', error)
+      this.showError('An error occurred while adding the subtask')
+    }
+  }
+
+  // Open modal for adding multiple subtasks
+  addMultipleSubtasks(event) {
+    event.preventDefault()
+    
+    // Find the subtask controller and open its modal
+    const subtaskController = this.application.getControllerForElementAndIdentifier(
+      document.querySelector('[data-controller*="subtask"]'), 
+      'subtask'
+    )
+    
+    if (subtaskController) {
+      subtaskController.openModal(event)
+    } else {
+      console.error('Subtask controller not found')
+    }
   }
 
   showSaveIndicator() {
