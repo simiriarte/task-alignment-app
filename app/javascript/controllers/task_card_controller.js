@@ -3,7 +3,8 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "form", "titleInput", "dueDateInput", "cognitiveDensityInput", 
-    "estimatedHoursInput"
+    "estimatedHoursInput", "subtasksSection", "subtasksHeader", 
+    "subtasksList", "subtasksToggle"
   ]
 
   connect() {
@@ -15,6 +16,9 @@ export default class extends Controller {
     if (focusCheckbox && focusCheckbox.classList.contains('checked')) {
       this.element.classList.add('focus-task-active')
     }
+    
+    // Check if this task should have subtasks section (for page reloads)
+    this.initializeSubtasksSection()
   }
 
   disconnect() {
@@ -398,6 +402,8 @@ export default class extends Controller {
     event.preventDefault()
     
     const taskId = this.element.dataset.taskId
+    console.log('Adding single subtask for task ID:', taskId)
+    
     if (!taskId) {
       console.error('Task ID not found')
       return
@@ -417,12 +423,15 @@ export default class extends Controller {
       })
 
       const data = await response.json()
+      console.log('Add subtask response:', data)
 
       if (data.success) {
-        // Replace the task card with updated HTML
-        this.element.outerHTML = data.task_html
-        this.showSuccessMessage('Subtask added')
+        console.log('Subtask added successfully, updating task card...')
+        // Create or update the subtasks section
+        this.updateSubtasksSection(data.subtask)
+        this.showSaveIndicator()
       } else {
+        console.error('Failed to add subtask:', data.error)
         this.showError(data.error || 'Failed to add subtask')
       }
     } catch (error) {
@@ -445,6 +454,288 @@ export default class extends Controller {
       subtaskController.openModal(event)
     } else {
       console.error('Subtask controller not found')
+    }
+  }
+
+  // Toggle subtasks visibility
+  toggleSubtasks(event) {
+    event.preventDefault()
+    
+    // Look for subtasks section as sibling after this task card
+    let subtasksSection = this.element.nextElementSibling
+    if (!subtasksSection || !subtasksSection.classList.contains('subtasks-section')) {
+      return
+    }
+    
+    const subtasksList = subtasksSection.querySelector('.subtasks-list')
+    const toggleIcon = subtasksSection.querySelector('.subtasks-toggle-icon')
+    
+    if (!subtasksList || !toggleIcon) {
+      return
+    }
+    
+    const isExpanded = subtasksList.classList.contains('expanded')
+    const toggleButton = subtasksSection.querySelector('.subtasks-toggle')
+    
+    if (isExpanded) {
+      // Collapse subtasks
+      subtasksList.classList.remove('expanded')
+      if (toggleButton) toggleButton.classList.remove('expanded')
+      this.updateToggleIcon(false)
+    } else {
+      // Expand subtasks
+      subtasksList.classList.add('expanded')
+      if (toggleButton) toggleButton.classList.add('expanded')
+      this.updateToggleIcon(true)
+    }
+  }
+
+  updateToggleIcon(isExpanded) {
+    // Look for subtasks section as sibling after this task card
+    let subtasksSection = this.element.nextElementSibling
+    if (!subtasksSection || !subtasksSection.classList.contains('subtasks-section')) {
+      return
+    }
+    
+    const toggleIcon = subtasksSection.querySelector('.subtasks-toggle-icon')
+    if (toggleIcon) {
+      toggleIcon.innerHTML = isExpanded ? this.getChevronUpIcon() : this.getChevronDownIcon()
+    }
+  }
+
+  // Helper methods for icons
+  getChevronUpIcon() {
+    return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+    </svg>`
+  }
+
+  getChevronDownIcon() {
+    return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+    </svg>`
+  }
+
+  // Toggle subtask completion
+  async toggleSubtaskComplete(event) {
+    const checkbox = event.target
+    const subtaskId = checkbox.dataset.subtaskId
+    const isCompleted = checkbox.checked
+    
+    if (!subtaskId) {
+      console.error('Subtask ID not found')
+      return
+    }
+
+    try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      const status = isCompleted ? 'completed' : 'unrated'
+      
+      const response = await fetch(`/tasks/${subtaskId}`, {
+        method: 'PATCH',
+        headers: {
+          'X-CSRF-Token': csrfToken,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+          task: { status: status }
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Update the subtask title styling
+        const subtaskItem = checkbox.closest('.subtask-item')
+        const subtaskTitle = subtaskItem.querySelector('.subtask-title')
+        
+        if (isCompleted) {
+          subtaskTitle.classList.add('completed')
+        } else {
+          subtaskTitle.classList.remove('completed')
+        }
+        
+        // No need to update summary since we removed the counter
+      } else {
+        // Revert checkbox if update failed
+        checkbox.checked = !isCompleted
+        this.showError(data.error || 'Failed to update subtask')
+      }
+    } catch (error) {
+      console.error('Error updating subtask:', error)
+      // Revert checkbox if update failed
+      checkbox.checked = !isCompleted
+      this.showError('An error occurred while updating the subtask')
+    }
+  }
+
+  // Initialize subtasks section on page load if task has subtasks
+  async initializeSubtasksSection() {
+    const taskId = this.element.dataset.taskId
+    if (!taskId) return
+    
+    try {
+      const response = await fetch(`/tasks/${taskId}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.subtasks && data.subtasks.length > 0) {
+          this.createSubtasksSectionWithData(data.subtasks)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading subtasks:', error)
+    }
+  }
+
+  // Create subtasks section with existing data
+  createSubtasksSectionWithData(subtasks) {
+    // Check if subtasks section already exists as sibling
+    let subtasksSection = this.element.nextElementSibling
+    if (!subtasksSection || !subtasksSection.classList.contains('subtasks-section')) {
+      subtasksSection = null
+    }
+    
+    if (!subtasksSection) {
+      subtasksSection = this.createSubtasksSection()
+      this.element.insertAdjacentElement('afterend', subtasksSection)
+    }
+    
+    // Add each existing subtask to the list
+    const subtasksList = subtasksSection.querySelector('.subtasks-list')
+    if (subtasksList) {
+      subtasks.forEach(subtask => {
+        this.addSubtaskToListElement(subtasksList, subtask)
+      })
+    }
+    
+    // Start collapsed - user can click to expand
+    this.updateToggleIcon(false)
+  }
+
+  // Update the subtasks summary count
+  updateSubtasksSection(subtaskData) {
+    
+    // Check if subtasks section already exists as sibling after this task card
+    let subtasksSection = this.element.nextElementSibling
+    if (!subtasksSection || !subtasksSection.classList.contains('subtasks-section')) {
+      subtasksSection = null
+    }
+    
+    if (!subtasksSection) {
+      // Create the subtasks section for the first time
+      subtasksSection = this.createSubtasksSection()
+      
+      // Insert the subtasks section outside the task card as a sibling
+      this.element.insertAdjacentElement('afterend', subtasksSection)
+      
+      // Keep the main task card appearance unchanged
+      // No need to modify height constraints since subtask section is outside
+    }
+    
+    // Add the new subtask to the list
+    this.addSubtaskToList(subtaskData)
+    
+    // Start with subtasks list expanded when new subtask is added
+    const subtasksList = subtasksSection.querySelector('.subtasks-list')
+    const toggleButton = subtasksSection.querySelector('.subtasks-toggle')
+    if (subtasksList) {
+      subtasksList.classList.add('expanded')
+    }
+    if (toggleButton) {
+      toggleButton.classList.add('expanded')
+    }
+    this.updateToggleIcon(true)
+  }
+
+  createSubtasksSection() {
+    const section = document.createElement('div')
+    section.className = 'subtasks-section'
+    section.setAttribute('data-task-card-target', 'subtasksSection')
+    section.setAttribute('data-parent-task-id', this.element.dataset.taskId)
+    
+    section.innerHTML = `
+      <div class="subtasks-toggle" 
+           data-task-id="${this.element.dataset.taskId}">
+        <div class="subtasks-toggle-icon">
+          ${this.getChevronDownIcon()}
+        </div>
+      </div>
+      
+      <div class="subtasks-list">
+      </div>
+    `
+    
+    // Manually bind the click event since the element is outside the controller scope
+    const toggleButton = section.querySelector('.subtasks-toggle')
+    if (toggleButton) {
+      toggleButton.addEventListener('click', (event) => {
+        this.toggleSubtasks(event)
+      })
+    }
+    
+    return section
+  }
+
+  addSubtaskToList(subtaskData) {
+    // Look for subtasks section as sibling after this task card
+    let subtasksSection = this.element.nextElementSibling
+    if (!subtasksSection || !subtasksSection.classList.contains('subtasks-section')) {
+      return
+    }
+    
+    const subtasksList = subtasksSection.querySelector('.subtasks-list')
+    if (!subtasksList) return
+    
+    this.addSubtaskToListElement(subtasksList, subtaskData)
+  }
+
+  addSubtaskToListElement(subtasksList, subtaskData) {
+    const subtaskItem = document.createElement('div')
+    subtaskItem.className = 'subtask-item'
+    subtaskItem.setAttribute('data-subtask-id', subtaskData.id)
+    
+    const isCompleted = subtaskData.status === 'completed'
+    
+    subtaskItem.innerHTML = `
+      <div class="subtask-checkbox">
+        <input type="checkbox" 
+               class="subtask-complete-checkbox"
+               data-action="change->task-card#toggleSubtaskComplete"
+               data-subtask-id="${subtaskData.id}"
+               ${isCompleted ? 'checked' : ''}>
+      </div>
+      <div class="subtask-content">
+        <span class="subtask-title ${isCompleted ? 'completed' : ''}">
+          ${subtaskData.title}
+        </span>
+      </div>
+    `
+    
+    subtasksList.appendChild(subtaskItem)
+  }
+
+  updateSubtasksSummary() {
+    const subtaskItems = this.element.querySelectorAll('.subtask-item')
+    const completedItems = this.element.querySelectorAll('.subtask-complete-checkbox:checked')
+    
+    const countElement = this.element.querySelector('.subtasks-count')
+    const completedElement = this.element.querySelector('.subtasks-completed')
+    
+    if (countElement && completedElement) {
+      const total = subtaskItems.length
+      const completed = completedItems.length
+      
+      countElement.textContent = `${total} subtask${total !== 1 ? 's' : ''}`
+      completedElement.textContent = `(${completed} completed)`
     }
   }
 

@@ -42,6 +42,10 @@ module ApplicationHelper
     icon("chevron-down", size: size, css_class: css_class, **options)
   end
 
+  def chevron_up_icon(size: :md, css_class: nil, **options)
+    icon("chevron-up", size: size, css_class: css_class, **options)
+  end
+
   def chevron_left_icon(size: :md, css_class: nil, **options)
     icon("chevron-left", size: size, css_class: css_class, **options)
   end

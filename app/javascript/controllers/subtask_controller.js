@@ -171,19 +171,13 @@ export default class extends Controller {
     // Close modal
     this.closeModal()
     
-    // Refresh the parent task card to show subtasks
-    const parentTaskId = this.parentTaskIdTarget.value
-    const parentTaskCard = document.querySelector(`[data-task-id="${parentTaskId}"]`)
-    
-    if (parentTaskCard) {
-      // Trigger a custom event that the task card can listen for
-      parentTaskCard.dispatchEvent(new CustomEvent('subtasks:created', {
-        detail: { subtasks: data.subtasks }
-      }))
-    }
-    
     // Show success message
     this.showFlashMessage(`Created ${data.subtasks.length} subtask${data.subtasks.length !== 1 ? 's' : ''}`, 'success')
+    
+    // Reload the page to refresh all task cards with new data
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000) // Give time for flash message to show
   }
 
   // Set submit button state

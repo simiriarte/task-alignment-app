@@ -2539,22 +2539,69 @@ body.dragging-active .task-cards-container {
 
 /* Subtask Styles */
 .subtasks-section {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #f1f5f9;
-  background: rgba(249, 250, 251, 0.5);
-  margin-left: -10px;
-  margin-right: -10px;
-  margin-bottom: -16px;
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-bottom: 8px;
+  position: relative;
+  margin: 0 20px;
+  margin-top: -10px;
+  margin-bottom: 10px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.subtasks-toggle {
+  display: flex;
+  justify-content: center;
+  min-height: 12px;
+  max-height: 12px;
+  padding: 0 16px;
+  cursor: pointer;
+  border-radius: 0 0 8px 8px;
+  transition: background-color 0.2s ease, border-radius 0.3s ease;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-top: none;
+}
+
+.subtasks-toggle.expanded {
+  border-radius: 0;
+}
+
+.subtasks-toggle:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.subtasks-toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.subtasks-toggle-icon:hover {
+  color: var(--text-primary);
 }
 
 .subtasks-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  padding: 0 16px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  background: #ffffff;
+  border-radius: 0 0 8px 8px;
+}
+
+.subtasks-list.expanded {
+  max-height: 300px;
+  padding: 12px 16px 8px 16px;
+  border-left: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .subtask-item {

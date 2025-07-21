@@ -7,21 +7,30 @@ class TasksController < ApplicationController
     @tasks = current_user.tasks.order(created_at: :desc)
 
     # Progressive disclosure: determine which sections should be active
-    @has_unrated_tasks = current_user.tasks.where(status: "unrated").exists?
-    @has_rated_tasks = current_user.tasks.where(status: "rated").exists?
-    @has_parked_tasks = current_user.tasks.where(status: "parked").exists?
-    @has_completed_tasks = current_user.tasks.where(status: "completed").exists?
+    @has_unrated_tasks = current_user.tasks.where(status: "unrated", parent_task_id: nil).exists?
+    @has_rated_tasks = current_user.tasks.where(status: "rated", parent_task_id: nil).exists?
+    @has_parked_tasks = current_user.tasks.where(status: "parked", parent_task_id: nil).exists?
+    @has_completed_tasks = current_user.tasks.where(status: "completed", parent_task_id: nil).exists?
 
     # Task counts for each section
-    @unrated_count = current_user.tasks.where(status: "unrated").count
-    @rated_count = current_user.tasks.where(status: "rated").count
-    @parked_count = current_user.tasks.where(status: "parked").count
-    @completed_count = current_user.tasks.where(status: "completed").count
+    @unrated_count = current_user.tasks.where(status: "unrated", parent_task_id: nil).count
+    @rated_count = current_user.tasks.where(status: "rated", parent_task_id: nil).count
+    @parked_count = current_user.tasks.where(status: "parked", parent_task_id: nil).count
+    @completed_count = current_user.tasks.where(status: "completed", parent_task_id: nil).count
     @total_tasks = current_user.tasks.count
   end
 
   # GET /tasks/1
   def show
+    respond_to do |format|
+      format.html
+      format.json {
+        render json: {
+          task: @task.as_json(only: [:id, :title, :status]),
+          subtasks: @task.subtasks.as_json(only: [:id, :title, :status])
+        }
+      }
+    end
   end
 
   # GET /tasks/new
@@ -378,6 +387,8 @@ class TasksController < ApplicationController
     if @subtask.save
       respond_to do |format|
         format.json {
+          # Reload the parent task to ensure subtasks association is fresh
+          @parent_task.reload
           # Return the updated parent task card HTML
           task_html = render_to_string(partial: "task_card", locals: { task: @parent_task }, formats: [:html])
           render json: {
