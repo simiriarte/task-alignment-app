@@ -1,5 +1,7 @@
 class Task < ApplicationRecord
   belongs_to :user
+  belongs_to :parent_task, class_name: 'Task', optional: true
+  has_many :subtasks, class_name: 'Task', foreign_key: 'parent_task_id', dependent: :destroy
 
   # Validations
   validates :title, presence: true
@@ -26,6 +28,16 @@ class Task < ApplicationRecord
 
   # Callbacks
   before_save :calculate_score_and_update_status
+
+  # Subtask helper methods
+  def has_subtasks?
+    subtasks.any?
+  end
+
+  def is_subtask?
+    parent_task_id.present?
+  end
+
 
   private
 

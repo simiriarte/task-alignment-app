@@ -493,26 +493,26 @@ body {
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: var(--row1-height, 1fr) var(--row2-height, 1fr);
-  gap: 24px;
-  margin-top: 20px;
-  min-height: calc(100vh - 160px);
-  overflow-y: auto;
-  overflow-x: hidden;
+  grid-template-rows: var(--row1-height, 320px) var(--row2-height, 320px);
+  gap: 16px;
+  margin-top: 12px;
+  height: 656px;
+  overflow: visible;
 }
 
 .dashboard-section {
   background: var(--surface-color);
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 16px;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-light);
   position: relative;
-  min-height: 150px;
-  max-height: 1500px;
+  min-height: 280px;
+  max-height: 100%;
+  height: 100%;
 }
 
 .dashboard-section.section-dimmed {
@@ -2102,12 +2102,16 @@ body {
 /* Calendar Placeholder */
 .calendar-placeholder {
   background: var(--surface-color);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-light);
   text-align: center;
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .calendar-placeholder h3 {
@@ -2479,3 +2483,131 @@ body.dragging-active .task-cards-container {
   20%, 40%, 60%, 80% { transform: translateX(3px); }
 }
 
+/* Subtask Panel Styling */
+
+/* Enhanced shadow for main task card when it has subtasks */
+.task-card {
+  position: relative;
+  overflow: visible;
+}
+
+.task-card:has(.subtask-panel[style*="block"]) {
+  /* Enhanced bottom shadow when subtask panel is visible */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.12);
+  /* Allow this specific task card to overflow */
+  z-index: 10;
+}
+
+/* Override container overflow for task cards with expanded subtasks */
+.task-card:has(.subtask-panel[style*="block"]) ~ * {
+  z-index: 1;
+}
+
+.dashboard-section:has(.task-card .subtask-panel[style*="block"]) {
+  overflow: visible;
+}
+
+.dashboard-section:has(.task-card .subtask-panel[style*="block"]) .section-content {
+  overflow: visible;
+}
+
+.dashboard-section:has(.task-card .subtask-panel[style*="block"]) .task-cards-container {
+  overflow: visible;
+}
+
+/* Subtask Panel - appears as extension below main card */
+.subtask-panel {
+  background: var(--surface-color);
+  margin: 8px -16px 0 -16px; /* Extend to edges, negative margins to position outside */
+  padding: 0 32px 16px 32px; /* Inner padding to create narrower appearance */
+  border-radius: 0 0 12px 12px; /* Only bottom corners rounded */
+  border-top: 1px solid var(--border-light); /* Separator from main content */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08); /* Layered shadow effect */
+  overflow: visible;
+  transition: all 0.3s ease-out;
+  max-height: 0;
+  opacity: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.subtask-panel[style*="block"] {
+  max-height: 500px;
+  opacity: 1;
+}
+
+.subtask-panel-content {
+  padding: 12px 0;
+}
+
+/* Subtask Items */
+.subtask-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.subtask-item:last-child {
+  border-bottom: none;
+}
+
+/* Drag Handle */
+.subtask-drag-handle {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-family: monospace;
+  cursor: grab;
+  user-select: none;
+  line-height: 1;
+  padding: 2px;
+}
+
+.subtask-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Subtask Checkbox */
+.subtask-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+}
+
+/* Subtask Title Input */
+.subtask-title-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--text-primary);
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.subtask-title-input:focus {
+  outline: none;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.subtask-title-input.completed {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* Chevron Animation */
+.subtask-toggle-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.subtask-toggle-btn.expanded svg {
+  transform: rotate(180deg);
+}
+
+/* Smooth Expand/Collapse Animation */
+.subtask-panel {
+  transition: max-height 0.4s ease-out, opacity 0.3s ease-out, margin-top 0.3s ease-out;
+}

@@ -1,23 +1,24 @@
 class TasksController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_task, only: [ :show, :edit, :update, :destroy, :duplicate ]
+  before_action :set_task, only: [ :show, :edit, :update, :destroy, :duplicate, :add_subtask ]
 
   # GET /tasks
   def index
-    @tasks = current_user.tasks.order(created_at: :desc)
+    # Only show parent tasks (not subtasks) in the main dashboard
+    @tasks = current_user.tasks.where(parent_task_id: nil).order(created_at: :desc)
 
-    # Progressive disclosure: determine which sections should be active
-    @has_unrated_tasks = current_user.tasks.where(status: "unrated").exists?
-    @has_rated_tasks = current_user.tasks.where(status: "rated").exists?
-    @has_parked_tasks = current_user.tasks.where(status: "parked").exists?
-    @has_completed_tasks = current_user.tasks.where(status: "completed").exists?
+    # Progressive disclosure: determine which sections should be active (only parent tasks)
+    @has_unrated_tasks = current_user.tasks.where(status: "unrated", parent_task_id: nil).exists?
+    @has_rated_tasks = current_user.tasks.where(status: "rated", parent_task_id: nil).exists?
+    @has_parked_tasks = current_user.tasks.where(status: "parked", parent_task_id: nil).exists?
+    @has_completed_tasks = current_user.tasks.where(status: "completed", parent_task_id: nil).exists?
 
-    # Task counts for each section
-    @unrated_count = current_user.tasks.where(status: "unrated").count
-    @rated_count = current_user.tasks.where(status: "rated").count
-    @parked_count = current_user.tasks.where(status: "parked").count
-    @completed_count = current_user.tasks.where(status: "completed").count
-    @total_tasks = current_user.tasks.count
+    # Task counts for each section (only parent tasks)
+    @unrated_count = current_user.tasks.where(status: "unrated", parent_task_id: nil).count
+    @rated_count = current_user.tasks.where(status: "rated", parent_task_id: nil).count
+    @parked_count = current_user.tasks.where(status: "parked", parent_task_id: nil).count
+    @completed_count = current_user.tasks.where(status: "completed", parent_task_id: nil).count
+    @total_tasks = current_user.tasks.where(parent_task_id: nil).count
   end
 
   # GET /tasks/1
@@ -283,6 +284,33 @@ class TasksController < ApplicationController
       format.json { render json: { success: false, error: error_message } }
     end
   end
+
+  # POST /tasks/1/add_subtask
+  def add_subtask
+    @subtask = current_user.tasks.build(
+      title: "New subtask",
+      status: 'unrated',
+      cognitive_density: 0,
+      estimated_hours: 0,
+      parent_task_id: @task.id
+    )
+
+    if @subtask.save
+      respond_to do |format|
+        format.json {
+          render json: {
+            success: true,
+            subtask: @subtask.as_json(only: [:id, :title, :status, :parent_task_id])
+          }
+        }
+      end
+    else
+      respond_to do |format|
+        format.json { render json: { success: false, error: @subtask.errors.full_messages.join(", ") } }
+      end
+    end
+  end
+
 
   private
 

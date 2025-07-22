@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "form", "titleInput", "dueDateInput", "cognitiveDensityInput", 
-    "estimatedHoursInput"
+    "estimatedHoursInput", "subtaskPanel", "subtaskToggle", "subtaskList"
   ]
 
   connect() {
@@ -393,11 +393,6 @@ export default class extends Controller {
     this.element.classList.toggle('expanded')
   }
 
-  addSubtask(event) {
-    event.preventDefault()
-    // This could be implemented later for subtask functionality
-    this.showSuccessMessage("Subtask functionality coming soon!")
-  }
 
   showSaveIndicator() {
     // No visual indicator needed - changes save automatically
@@ -1209,4 +1204,156 @@ export default class extends Controller {
       impactSelect.style.borderColor = ''
     }, 3000)
   }
+
+  // Subtask Panel Methods
+  toggleSubtaskPanel(event) {
+    event.preventDefault()
+    
+    if (!this.hasSubtaskPanelTarget) {
+      console.error('Subtask panel target not found')
+      return
+    }
+    
+    const panel = this.subtaskPanelTarget
+    const toggleBtn = this.subtaskToggleTarget
+    
+    if (panel.style.display === 'none' || !panel.style.display) {
+      // Show panel
+      panel.style.display = 'block'
+      toggleBtn.classList.add('expanded')
+    } else {
+      // Hide panel
+      panel.style.display = 'none'
+      toggleBtn.classList.remove('expanded')
+    }
+  }
+
+  async addSingleSubtask(event) {
+    event.preventDefault()
+    const taskId = this.element.dataset.taskId
+    
+    if (!taskId) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/tasks/${taskId}/add_subtask`, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        this.addSubtaskToUI(data.subtask)
+        // Show panel if hidden
+        if (this.hasSubtaskPanelTarget) {
+          this.subtaskPanelTarget.style.display = 'block'
+          if (this.hasSubtaskToggleTarget) {
+            this.subtaskToggleTarget.classList.add('expanded')
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error adding subtask:', error)
+    }
+  }
+
+  addSubtaskToUI(subtaskData) {
+    if (!this.hasSubtaskListTarget) return
+    
+    const subtaskHTML = `
+      <div class="subtask-item" data-subtask-id="${subtaskData.id}">
+        <div class="subtask-drag-handle">⋮⋮</div>
+        <input type="checkbox" 
+               class="subtask-checkbox"
+               data-action="change->task-card#toggleSubtaskComplete"
+               data-subtask-id="${subtaskData.id}">
+        <input type="text" 
+               class="subtask-title-input"
+               value="${subtaskData.title}"
+               data-action="blur->task-card#saveSubtaskTitle"
+               data-subtask-id="${subtaskData.id}">
+      </div>
+    `
+    
+    this.subtaskListTarget.insertAdjacentHTML('beforeend', subtaskHTML)
+  }
+
+  async toggleSubtaskComplete(event) {
+    const checkbox = event.target
+    const subtaskId = checkbox.dataset.subtaskId
+    const isCompleted = checkbox.checked
+    
+    if (!subtaskId) return
+
+    try {
+      const response = await fetch(`/tasks/${subtaskId}`, {
+        method: 'PATCH',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          task: { status: isCompleted ? 'completed' : 'unrated' }
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        // Update title input styling
+        const subtaskItem = checkbox.closest('.subtask-item')
+        const titleInput = subtaskItem.querySelector('.subtask-title-input')
+        
+        if (isCompleted) {
+          titleInput.classList.add('completed')
+        } else {
+          titleInput.classList.remove('completed')
+        }
+      } else {
+        // Revert checkbox if update failed
+        checkbox.checked = !isCompleted
+      }
+    } catch (error) {
+      console.error('Error updating subtask:', error)
+      checkbox.checked = !isCompleted
+    }
+  }
+
+  async saveSubtaskTitle(event) {
+    const input = event.target
+    const subtaskId = input.dataset.subtaskId
+    const newTitle = input.value.trim()
+    
+    if (!subtaskId || !newTitle) return
+
+    try {
+      const response = await fetch(`/tasks/${subtaskId}`, {
+        method: 'PATCH',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          task: { title: newTitle }
+        })
+      })
+
+      const data = await response.json()
+      
+      if (!data.success) {
+        console.error('Failed to save subtask title')
+      }
+    } catch (error) {
+      console.error('Error saving subtask title:', error)
+    }
+  }
+
 } 

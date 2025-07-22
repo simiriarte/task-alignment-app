@@ -146,11 +146,14 @@
       
       <!-- Action Buttons -->
       <div class="card-actions">
-        <button type="button" class="card-action-btn" title="Add subtask">
+        <button type="button" class="card-action-btn" title="Add subtask"
+                data-action="click->task-card#addSingleSubtask"
+                data-task-id="<%= task.id %>">
           <%= plus_icon(size: :sm) %>
         </button>
-        <button type="button" class="card-action-btn" title="Unpack task" 
-                data-action="click->brain-dump#openModal">
+        <button type="button" class="card-action-btn subtask-toggle-btn" title="Toggle subtasks" 
+                data-action="click->task-card#toggleSubtaskPanel"
+                data-task-card-target="subtaskToggle">
           <%= chevron_down_icon(size: :sm) %>
         </button>
         <button type="button" class="card-action-btn park-btn" 
@@ -177,4 +180,29 @@
     <%= form.hidden_field :estimated_hours, data: { task_card_target: "estimatedHoursInput" } %>
     
   <% end %>
+  
+  <!-- Subtask Panel (inside task card for controller scope) -->
+  <div class="subtask-panel" data-task-card-target="subtaskPanel" style="display: none;">
+    <div class="subtask-panel-content">
+      <div class="subtask-list" data-task-card-target="subtaskList">
+        <% if task.has_subtasks? %>
+          <% task.subtasks.each do |subtask| %>
+            <div class="subtask-item" data-subtask-id="<%= subtask.id %>">
+              <div class="subtask-drag-handle">⋮⋮</div>
+              <input type="checkbox" 
+                     class="subtask-checkbox"
+                     data-action="change->task-card#toggleSubtaskComplete"
+                     data-subtask-id="<%= subtask.id %>"
+                     <%= 'checked' if subtask.status == 'completed' %>>
+              <input type="text" 
+                     class="subtask-title-input <%= 'completed' if subtask.status == 'completed' %>"
+                     value="<%= subtask.title %>"
+                     data-action="blur->task-card#saveSubtaskTitle"
+                     data-subtask-id="<%= subtask.id %>">
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
 </div> 
