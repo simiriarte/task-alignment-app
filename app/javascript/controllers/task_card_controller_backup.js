@@ -1,0 +1,1 @@
+// Backup of conflicted file before resolution

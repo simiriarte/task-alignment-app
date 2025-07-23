@@ -1,28 +1,35 @@
 class TasksController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_task, only: [ :show, :edit, :update, :destroy, :duplicate, :add_subtask ]
+  before_action :set_task, only: [ :show, :edit, :update, :destroy, :duplicate ]
 
   # GET /tasks
   def index
-    # Only show parent tasks (not subtasks) in the main dashboard
-    @tasks = current_user.tasks.where(parent_task_id: nil).order(created_at: :desc)
+    @tasks = current_user.tasks.order(created_at: :desc)
 
-    # Progressive disclosure: determine which sections should be active (only parent tasks)
-    @has_unrated_tasks = current_user.tasks.where(status: "unrated", parent_task_id: nil).exists?
-    @has_rated_tasks = current_user.tasks.where(status: "rated", parent_task_id: nil).exists?
-    @has_parked_tasks = current_user.tasks.where(status: "parked", parent_task_id: nil).exists?
-    @has_completed_tasks = current_user.tasks.where(status: "completed", parent_task_id: nil).exists?
+    # Progressive disclosure: determine which sections should be active
+    @has_unrated_tasks = current_user.tasks.where(status: "unrated").exists?
+    @has_rated_tasks = current_user.tasks.where(status: "rated").exists?
+    @has_parked_tasks = current_user.tasks.where(status: "parked").exists?
+    @has_completed_tasks = current_user.tasks.where(status: "completed").exists?
 
-    # Task counts for each section (only parent tasks)
-    @unrated_count = current_user.tasks.where(status: "unrated", parent_task_id: nil).count
-    @rated_count = current_user.tasks.where(status: "rated", parent_task_id: nil).count
-    @parked_count = current_user.tasks.where(status: "parked", parent_task_id: nil).count
-    @completed_count = current_user.tasks.where(status: "completed", parent_task_id: nil).count
-    @total_tasks = current_user.tasks.where(parent_task_id: nil).count
+    # Task counts for each section
+    @unrated_count = current_user.tasks.where(status: "unrated").count
+    @rated_count = current_user.tasks.where(status: "rated").count
+    @parked_count = current_user.tasks.where(status: "parked").count
+    @completed_count = current_user.tasks.where(status: "completed").count
+    @total_tasks = current_user.tasks.count
   end
 
   # GET /tasks/1
   def show
+    respond_to do |format|
+      format.html
+      format.json {
+        render json: {
+          task: @task.as_json(only: [:id, :title, :status])
+        }
+      }
+    end
   end
 
   # GET /tasks/new
@@ -41,7 +48,7 @@ class TasksController < ApplicationController
           if params[:inline]
             # For inline creation, return the task card HTML
             task_html = render_to_string(partial: "task_card", locals: { task: @task }, formats: [ :html ])
-            unrated_count = current_user.tasks.where(status: "unrated").count
+            unrated_count = current_user.tasks.where(status: "unrated", parent_task_id: nil).count
             render json: {
               success: true,
               task_html: task_html,
@@ -285,31 +292,6 @@ class TasksController < ApplicationController
     end
   end
 
-  # POST /tasks/1/add_subtask
-  def add_subtask
-    @subtask = current_user.tasks.build(
-      title: "New subtask",
-      status: 'unrated',
-      cognitive_density: 0,
-      estimated_hours: 0,
-      parent_task_id: @task.id
-    )
-
-    if @subtask.save
-      respond_to do |format|
-        format.json {
-          render json: {
-            success: true,
-            subtask: @subtask.as_json(only: [:id, :title, :status, :parent_task_id])
-          }
-        }
-      end
-    else
-      respond_to do |format|
-        format.json { render json: { success: false, error: @subtask.errors.full_messages.join(", ") } }
-      end
-    end
-  end
 
 
   private
@@ -324,7 +306,7 @@ class TasksController < ApplicationController
     permitted_params = params.require(:task).permit(:title, :status, :energy, :simplicity, :impact,
                                                    :cognitive_density, :estimated_hours, :notes,
                                                    :due_date, :actual_energy, :actual_simplicity,
-                                                   :actual_impact, :time_spent, :is_focus_task)
+                                                   :actual_impact, :time_spent, :is_focus_task, :parent_task_id)
 
     # Parse due_date if it's provided in MM/DD or MM/DD/YYYY format
     if permitted_params[:due_date].present? && permitted_params[:due_date].is_a?(String)

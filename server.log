@@ -1,0 +1,30 @@
+WARN: Unresolved or ambiguous specs during Gem::Specification.reset:
+      stringio (>= 0)
+      Available/installed versions of this gem:
+      - 3.1.7
+      - 3.0.4
+WARN: Clearing out unresolved specs. Try 'gem cleanup <gem>'
+Please report a bug if this causes problems.
+20:53:39 web.1  | started with pid 30829
+20:53:39 css.1  | started with pid 30830
+20:53:40 web.1  | => Booting Puma
+20:53:40 web.1  | => Rails 8.0.2 application starting in development 
+20:53:40 web.1  | => Run `bin/rails server --help` for more startup options
+20:53:40 web.1  | Puma starting in single mode...
+20:53:40 web.1  | * Puma version: 6.6.0 ("Return to Forever")
+20:53:40 web.1  | * Ruby version: ruby 3.2.0 (2022-12-25 revision a528908271) [arm64-darwin24]
+20:53:40 web.1  | *  Min threads: 3
+20:53:40 web.1  | *  Max threads: 3
+20:53:40 web.1  | *  Environment: development
+20:53:40 web.1  | *          PID: 30829
+20:53:40 web.1  | * Listening on http://127.0.0.1:3000
+20:53:40 web.1  | * Listening on http://[::1]:3000
+20:53:40 web.1  | Use Ctrl-C to stop
+20:53:41 css.1  | ≈ tailwindcss v4.1.11
+20:53:41 css.1  | 
+20:53:41 css.1  | Done in 46ms
+20:53:43 css.1  | exited with code 0
+20:53:43 system | sending SIGTERM to all processes
+20:53:43 web.1  | - Gracefully stopping, waiting for requests to finish
+20:53:43 web.1  | Exiting
+20:53:43 web.1  | terminated by SIGTERM
