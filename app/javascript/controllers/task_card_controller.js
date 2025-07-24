@@ -9,18 +9,26 @@ export default class extends Controller {
 
   connect() {
     this.saveTimeout = null
+    this.lastDeletedSubtask = null
     
     // Check if task is already marked as focus task and apply highlight
     const focusCheckbox = this.element.querySelector('.custom-checkbox')
     if (focusCheckbox && focusCheckbox.classList.contains('checked')) {
       this.element.classList.add('focus-task-active')
     }
+    
+    // Listen for undo shortcut
+    this.handleUndo = this.handleUndoKeypress.bind(this)
+    document.addEventListener('keydown', this.handleUndo)
   }
 
   disconnect() {
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout)
     }
+    
+    // Remove undo listener
+    document.removeEventListener('keydown', this.handleUndo)
   }
 
   selectAllText(event) {
@@ -1402,9 +1410,18 @@ export default class extends Controller {
     textSpan.className = 'subtask-text'
     textSpan.textContent = subtask.title
     
+    // Create delete button
+    const deleteBtn = document.createElement('button')
+    deleteBtn.type = 'button'
+    deleteBtn.className = 'subtask-delete'
+    deleteBtn.setAttribute('data-action', 'click->task-card#deleteSubtask')
+    deleteBtn.setAttribute('data-subtask-id', subtask.id)
+    deleteBtn.setAttribute('title', 'Delete subtask')
+    
     // Assemble subtask item
     subtaskItem.appendChild(checkbox)
     subtaskItem.appendChild(textSpan)
+    subtaskItem.appendChild(deleteBtn)
 
     // Add after the input container (so new subtasks appear at top of list)
     const inputContainer = this.subtaskInputContainerTarget
@@ -1480,6 +1497,118 @@ export default class extends Controller {
         checkbox.classList.remove('checked')
       }
       console.error('Error toggling subtask:', error)
+    }
+  }
+
+  async deleteSubtask(event) {
+    event.preventDefault()
+    
+    const deleteBtn = event.currentTarget
+    const subtaskId = deleteBtn.dataset.subtaskId
+    const subtaskItem = deleteBtn.closest('.subtask-item')
+    const subtaskText = subtaskItem.querySelector('.subtask-text').textContent
+    const isCompleted = subtaskItem.querySelector('.subtask-checkbox').classList.contains('checked')
+    
+    // Store deleted subtask info for undo
+    this.lastDeletedSubtask = {
+      id: subtaskId,
+      title: subtaskText,
+      completed: isCompleted,
+      position: Array.from(subtaskItem.parentNode.children).indexOf(subtaskItem),
+      deletedAt: Date.now()
+    }
+    
+    // Remove the subtask item from DOM immediately
+    subtaskItem.remove()
+    
+    try {
+      const taskId = this.element.dataset.taskId
+      const response = await fetch(`/tasks/${subtaskId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      
+      if (response.ok) {
+        // Check if there are any subtasks left
+        const remainingSubtasks = this.subtaskListTarget.querySelectorAll('.subtask-item')
+        if (remainingSubtasks.length === 0) {
+          // No more subtasks, remove the entire subtask area
+          const subtaskArea = this.element.querySelector('.subtask-area')
+          if (subtaskArea) {
+            subtaskArea.remove()
+          }
+        }
+      } else {
+        // If deletion failed, restore the item
+        console.error('Failed to delete subtask')
+        this.undoSubtaskDeletion()
+      }
+    } catch (error) {
+      console.error('Error deleting subtask:', error)
+      // Restore on error
+      this.undoSubtaskDeletion()
+    }
+  }
+
+  handleUndoKeypress(event) {
+    // Check for Ctrl+Z (Windows/Linux) or Cmd+Z (Mac)
+    if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
+      // Only handle undo if this task card has a recently deleted subtask
+      if (this.lastDeletedSubtask && (Date.now() - this.lastDeletedSubtask.deletedAt) < 30000) { // 30 second window
+        event.preventDefault()
+        this.undoSubtaskDeletion()
+      }
+    }
+  }
+
+  async undoSubtaskDeletion() {
+    if (!this.lastDeletedSubtask) return
+    
+    const deletedSubtask = this.lastDeletedSubtask
+    
+    try {
+      // Re-create the subtask
+      const taskId = this.element.dataset.taskId
+      const response = await fetch(`/tasks/${taskId}/create_subtask`, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          title: deletedSubtask.title
+        })
+      })
+
+      const data = await response.json()
+      
+      if (response.ok && data.success) {
+        // Ensure subtask area exists
+        if (!this.hasSubtaskContentTarget) {
+          this.createSubtaskArea()
+        }
+        
+        // Add the restored subtask to the list
+        this.addSubtaskToList(data.subtask)
+        
+        // If it was completed, mark it as completed
+        if (deletedSubtask.completed) {
+          const restoredItem = this.subtaskListTarget.querySelector(`[data-subtask-id="${data.subtask.id}"]`)
+          if (restoredItem) {
+            restoredItem.click() // Toggle to completed state
+          }
+        }
+        
+        // Clear the undo data
+        this.lastDeletedSubtask = null
+      }
+    } catch (error) {
+      console.error('Error restoring subtask:', error)
     }
   }
 

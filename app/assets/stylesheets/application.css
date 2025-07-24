@@ -2635,5 +2635,33 @@ body.dragging-active .task-cards-container {
   flex: 1;
 }
 
+/* Subtask delete button */
+.subtask-delete {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.subtask-delete:hover {
+  color: #1f2937;
+}
+
+.subtask-delete::after {
+  content: "×";
+  font-weight: 400;
+}
+
 
 
