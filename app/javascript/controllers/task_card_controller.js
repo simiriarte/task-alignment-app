@@ -1381,7 +1381,30 @@ export default class extends Controller {
     // Create new subtask item element
     const subtaskItem = document.createElement('div')
     subtaskItem.className = 'subtask-item'
-    subtaskItem.textContent = subtask.title
+    
+    // Create checkbox
+    const checkbox = document.createElement('button')
+    checkbox.type = 'button'
+    checkbox.className = 'subtask-checkbox'
+    checkbox.setAttribute('data-action', 'click->task-card#toggleSubtaskComplete')
+    checkbox.setAttribute('data-subtask-id', subtask.id)
+    
+    // Create check icon
+    const checkIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    checkIcon.setAttribute('class', 'check-icon')
+    checkIcon.setAttribute('viewBox', '0 0 20 20')
+    checkIcon.setAttribute('fill', 'currentColor')
+    checkIcon.innerHTML = '<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />'
+    checkbox.appendChild(checkIcon)
+    
+    // Create text span
+    const textSpan = document.createElement('span')
+    textSpan.className = 'subtask-text'
+    textSpan.textContent = subtask.title
+    
+    // Assemble subtask item
+    subtaskItem.appendChild(checkbox)
+    subtaskItem.appendChild(textSpan)
 
     // Add after the input container (so new subtasks appear at top of list)
     const inputContainer = this.subtaskInputContainerTarget
@@ -1412,6 +1435,51 @@ export default class extends Controller {
       // Expand
       content.classList.add('expanded')
       subtaskArea.classList.add('expanded')
+    }
+  }
+
+  async toggleSubtaskComplete(event) {
+    event.preventDefault()
+    
+    const checkbox = event.currentTarget
+    const subtaskId = checkbox.dataset.subtaskId
+    const isChecked = checkbox.classList.contains('checked')
+    
+    // Toggle visual state immediately
+    if (isChecked) {
+      checkbox.classList.remove('checked')
+    } else {
+      checkbox.classList.add('checked')
+    }
+    
+    try {
+      const taskId = this.element.dataset.taskId
+      const response = await fetch(`/tasks/${taskId}/toggle_subtask/${subtaskId}`, {
+        method: 'PATCH',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      
+      if (!response.ok) {
+        // Revert visual state if request failed
+        if (isChecked) {
+          checkbox.classList.add('checked')
+        } else {
+          checkbox.classList.remove('checked')
+        }
+        console.error('Failed to toggle subtask completion')
+      }
+    } catch (error) {
+      // Revert visual state on error
+      if (isChecked) {
+        checkbox.classList.add('checked')
+      } else {
+        checkbox.classList.remove('checked')
+      }
+      console.error('Error toggling subtask:', error)
     }
   }
 

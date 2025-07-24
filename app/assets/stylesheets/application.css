@@ -2579,6 +2579,9 @@ body.dragging-active .task-cards-container {
   color: #374151;
   border-bottom: 1px solid #e5e7eb;
   line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .subtask-item:first-child {
@@ -2588,6 +2591,48 @@ body.dragging-active .task-cards-container {
 .subtask-item:last-child {
   border-bottom: none;
   padding-bottom: 8px;
+}
+
+/* Subtask checkbox - gray version of focus task checkbox */
+.subtask-checkbox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #9ca3af;
+  border-radius: 2px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.subtask-checkbox .check-icon {
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.2s ease;
+  color: white;
+  stroke-width: 3;
+  width: 8px;
+  height: 8px;
+}
+
+.subtask-checkbox.checked {
+  background: #6b7280;
+  border-color: #6b7280;
+}
+
+.subtask-checkbox.checked .check-icon {
+  opacity: 1;
+  transform: scale(0.8);
+}
+
+.subtask-text {
+  flex: 1;
 }
 
 

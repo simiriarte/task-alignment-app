@@ -38,6 +38,11 @@ class Task < ApplicationRecord
   before_create :set_task_group_id, unless: :is_subtask
   before_save :calculate_score_and_update_status, unless: :is_subtask
 
+  # Instance methods
+  def completed?
+    status == 'completed'
+  end
+
 
 
   private

@@ -285,7 +285,7 @@ class TasksController < ApplicationController
 
   # PATCH /tasks/:id/toggle_subtask
   def toggle_subtask
-    @subtask = current_user.tasks.find(params[:id])
+    @subtask = current_user.tasks.find(params[:subtask_id])
     
     unless @subtask.is_subtask
       render json: { success: false, error: "Task is not a subtask" }, status: :unprocessable_entity

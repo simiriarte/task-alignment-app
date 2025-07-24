@@ -200,7 +200,12 @@
           
           <% task.subtasks.each do |subtask| %>
             <div class="subtask-item">
-              <%= subtask.title %>
+              <button type="button" class="subtask-checkbox <%= 'checked' if subtask.completed? %>" 
+                      data-action="click->task-card#toggleSubtaskComplete"
+                      data-subtask-id="<%= subtask.id %>">
+                <%= check_icon(size: :sm, css_class: "check-icon") %>
+              </button>
+              <span class="subtask-text"><%= subtask.title %></span>
             </div>
           <% end %>
         </div>
