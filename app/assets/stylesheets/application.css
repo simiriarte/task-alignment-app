@@ -2491,11 +2491,12 @@ body.dragging-active .task-cards-container {
 .subtask-area {
   margin: 0 12px 8px 12px;
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-top: none;
-  margin-top: -1px;
+  border-left: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
   border-radius: 0 0 8px 8px;
   position: relative;
+  overflow: hidden; /* Ensures clean corner rendering */
 }
 
 /* Task Card Wrapper - Contains both main card and subtask area */
@@ -2513,6 +2514,7 @@ body.dragging-active .task-cards-container {
   cursor: pointer;
   transform: scaleY(1);
   background: #f8fafc; /* Keep current light gray background */
+  position: relative;
 }
 
 .subtask-chevron svg {
@@ -2540,14 +2542,12 @@ body.dragging-active .task-cards-container {
 
 /* Subtask List - Static styling, no animations */
 .subtask-list {
-  padding: 8px 12px;
-  border-top: 1px solid #e2e8f0;
+  padding: 0 12px;
 }
 
 /* Subtask Input Container */
 .subtask-input-container {
-  margin-bottom: 8px;
-  padding-bottom: 8px;
+  padding: 8px 0;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -2569,14 +2569,20 @@ body.dragging-active .task-cards-container {
 }
 
 .subtask-item {
-  padding: 6px 0;
+  padding: 8px 0;
   font-size: 14px;
   color: #374151;
   border-bottom: 1px solid #e5e7eb;
+  line-height: 1.4;
+}
+
+.subtask-item:first-child {
+  padding-top: 8px;
 }
 
 .subtask-item:last-child {
   border-bottom: none;
+  padding-bottom: 8px;
 }
 
 
