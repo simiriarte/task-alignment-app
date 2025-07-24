@@ -3,7 +3,8 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "form", "titleInput", "dueDateInput", "cognitiveDensityInput", 
-    "estimatedHoursInput", "subtaskContent", "subtaskList"
+    "estimatedHoursInput", "subtaskContent", "subtaskList", 
+    "subtaskInputContainer", "subtaskInput"
   ]
 
   connect() {
@@ -1238,11 +1239,49 @@ export default class extends Controller {
   }
 
   // Subtask functionality
-  async addSubtask(event) {
+  addSubtask(event) {
     event.preventDefault()
     
-    const title = prompt("Enter subtask title:")
-    if (!title || !title.trim()) {
+    // If no subtask area exists, create it first
+    if (!this.hasSubtaskContentTarget) {
+      this.createSubtaskArea()
+    }
+    
+    const content = this.subtaskContentTarget
+    const subtaskArea = content.closest('.subtask-area')
+    
+    // Expand panel if not already expanded
+    if (!content.classList.contains('expanded')) {
+      content.classList.add('expanded')
+      subtaskArea.classList.add('expanded')
+    }
+    
+    // Show the input field and focus it
+    if (this.hasSubtaskInputContainerTarget && this.hasSubtaskInputTarget) {
+      this.subtaskInputContainerTarget.style.display = 'block'
+      this.subtaskInputTarget.focus()
+      this.subtaskInputTarget.value = ''
+    }
+  }
+
+  handleSubtaskInput(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      this.saveSubtask()
+    } else if (event.key === 'Escape') {
+      event.preventDefault()
+      this.cancelSubtaskInput()
+    }
+  }
+
+  async saveSubtask() {
+    if (!this.hasSubtaskInputTarget) {
+      return
+    }
+    
+    const title = this.subtaskInputTarget.value.trim()
+    if (!title) {
+      this.cancelSubtaskInput()
       return
     }
     
@@ -1256,21 +1295,101 @@ export default class extends Controller {
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          title: title.trim()
+          title: title
         })
       })
-      
+
       const data = await response.json()
       
       if (response.ok && data.success) {
-        // Reload the page to show the new subtask area
-        window.location.reload()
+        // Hide input, add new subtask to list, keep panel open
+        this.cancelSubtaskInput()
+        this.addSubtaskToList(data.subtask)
       } else {
         alert(data.error || "Failed to create subtask")
       }
     } catch (error) {
       console.error("Error creating subtask:", error)
       alert("Failed to create subtask")
+    }
+  }
+
+  cancelSubtaskInput() {
+    if (this.hasSubtaskInputContainerTarget) {
+      this.subtaskInputContainerTarget.style.display = 'none'
+    }
+    if (this.hasSubtaskInputTarget) {
+      this.subtaskInputTarget.value = ''
+    }
+  }
+
+  createSubtaskArea() {
+    // Create the entire subtask area structure
+    const subtaskArea = document.createElement('div')
+    subtaskArea.className = 'subtask-area'
+    
+    // Create chevron
+    const chevron = document.createElement('div')
+    chevron.className = 'subtask-chevron'
+    chevron.setAttribute('data-action', 'click->task-card#toggleSubtasks')
+    chevron.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 9l6 6 6-6"/>
+      </svg>
+    `
+    
+    // Create content area
+    const content = document.createElement('div')
+    content.className = 'subtask-content'
+    content.setAttribute('data-task-card-target', 'subtaskContent')
+    
+    // Create subtask list
+    const list = document.createElement('div')
+    list.className = 'subtask-list'
+    list.setAttribute('data-task-card-target', 'subtaskList')
+    
+    // Create input container
+    const inputContainer = document.createElement('div')
+    inputContainer.className = 'subtask-input-container'
+    inputContainer.setAttribute('data-task-card-target', 'subtaskInputContainer')
+    inputContainer.style.display = 'none'
+    
+    const input = document.createElement('input')
+    input.type = 'text'
+    input.className = 'subtask-input'
+    input.placeholder = 'Enter subtask title...'
+    input.setAttribute('data-task-card-target', 'subtaskInput')
+    input.setAttribute('data-action', 'keydown->task-card#handleSubtaskInput')
+    
+    // Assemble the structure
+    inputContainer.appendChild(input)
+    list.appendChild(inputContainer)
+    content.appendChild(list)
+    subtaskArea.appendChild(chevron)
+    subtaskArea.appendChild(content)
+    
+    // Add to DOM after the main task card
+    const taskCard = this.element.querySelector('.task-card')
+    this.element.appendChild(subtaskArea)
+  }
+
+  addSubtaskToList(subtask) {
+    if (!this.hasSubtaskListTarget) {
+      return
+    }
+
+    // Create new subtask item element
+    const subtaskItem = document.createElement('div')
+    subtaskItem.className = 'subtask-item'
+    subtaskItem.textContent = subtask.title
+
+    // Add after the input container (so new subtasks appear at top of list)
+    const inputContainer = this.subtaskInputContainerTarget
+    if (inputContainer && inputContainer.nextElementSibling) {
+      this.subtaskListTarget.insertBefore(subtaskItem, inputContainer.nextElementSibling)
+    } else {
+      // If no existing subtasks, just append after input container
+      this.subtaskListTarget.appendChild(subtaskItem)
     }
   }
 

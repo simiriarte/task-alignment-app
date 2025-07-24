@@ -191,6 +191,13 @@
       <!-- Expanding Panel - Only this part animates -->
       <div class="subtask-content" data-task-card-target="subtaskContent">
         <div class="subtask-list" data-task-card-target="subtaskList">
+          <!-- Inline Input Field (hidden by default) -->
+          <div class="subtask-input-container" data-task-card-target="subtaskInputContainer" style="display: none;">
+            <input type="text" class="subtask-input" data-task-card-target="subtaskInput" 
+                   placeholder="Enter subtask title..." 
+                   data-action="keydown->task-card#handleSubtaskInput">
+          </div>
+          
           <% task.subtasks.each do |subtask| %>
             <div class="subtask-item">
               <%= subtask.title %>

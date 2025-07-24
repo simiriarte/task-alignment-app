@@ -2512,6 +2512,7 @@ body.dragging-active .task-cards-container {
   color: #64748b;
   cursor: pointer;
   transform: scaleY(1);
+  background: #f8fafc; /* Keep current light gray background */
 }
 
 .subtask-chevron svg {
@@ -2529,6 +2530,7 @@ body.dragging-active .task-cards-container {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease-in-out;
+  background: #ffffff; /* White background for content area */
 }
 
 /* Expanded state - smooth transition */
@@ -2540,6 +2542,30 @@ body.dragging-active .task-cards-container {
 .subtask-list {
   padding: 8px 12px;
   border-top: 1px solid #e2e8f0;
+}
+
+/* Subtask Input Container */
+.subtask-input-container {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Subtask Input Field */
+.subtask-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.subtask-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .subtask-item {
