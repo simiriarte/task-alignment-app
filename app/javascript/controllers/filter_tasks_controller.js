@@ -19,6 +19,16 @@ export default class extends Controller {
         const data = await response.json()
         
         if (data.success) {
+          // Add to undo stack
+          if (window.UndoManager) {
+            window.UndoManager.addAction({
+              type: 'task_create',
+              data: {
+                taskId: data.task_id
+              }
+            })
+          }
+          
           // Add the new task card to the container
           this.insertNewTaskCard(data.task_html)
           

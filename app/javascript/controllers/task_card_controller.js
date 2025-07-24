@@ -9,26 +9,18 @@ export default class extends Controller {
 
   connect() {
     this.saveTimeout = null
-    this.lastDeletedSubtask = null
     
     // Check if task is already marked as focus task and apply highlight
     const focusCheckbox = this.element.querySelector('.custom-checkbox')
     if (focusCheckbox && focusCheckbox.classList.contains('checked')) {
       this.element.classList.add('focus-task-active')
     }
-    
-    // Listen for undo shortcut
-    this.handleUndo = this.handleUndoKeypress.bind(this)
-    document.addEventListener('keydown', this.handleUndo)
   }
 
   disconnect() {
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout)
     }
-    
-    // Remove undo listener
-    document.removeEventListener('keydown', this.handleUndo)
   }
 
   selectAllText(event) {
@@ -39,10 +31,14 @@ export default class extends Controller {
   }
 
   // Auto-save with debouncing
-  autoSave() {
+  autoSave(event) {
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout)
     }
+    
+    // Store the field being edited for undo
+    this.editingField = event ? event.target.name.replace('task[', '').replace(']', '') : null
+    this.previousValue = event ? event.target.dataset.previousValue : null
     
     this.saveTimeout = setTimeout(() => {
       this.submitForm()
@@ -206,6 +202,19 @@ export default class extends Controller {
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
+          // Add to undo stack
+          if (window.UndoManager) {
+            window.UndoManager.addAction({
+              type: 'task_delete',
+              data: {
+                taskData: data.task_data,
+                taskHtml: taskHtml,
+                parentElement: parentElement,
+                nextElement: nextElement
+              }
+            })
+          }
+          
           // Remove the main task card
           const wrapper = this.element.closest('.task-card-wrapper')
           const elementToRemove = wrapper || this.element
@@ -222,16 +231,6 @@ export default class extends Controller {
           // Update all counters if counts are provided
           if (data.counts && window.DashboardCounters) {
             window.DashboardCounters.updateCounters(data.counts)
-          }
-          
-          // Store undo data for the global undo system
-          if (window.TaskUndoManager) {
-            window.TaskUndoManager.addDeletion({
-              taskData: data.task_data,
-              taskHtml: taskHtml,
-              parentElement: parentElement,
-              nextElement: nextElement
-            })
           }
           
           // Notify parent controller about deletion
@@ -1310,6 +1309,16 @@ export default class extends Controller {
       const data = await response.json()
       
       if (response.ok && data.success) {
+        // Add to undo stack
+        if (window.UndoManager) {
+          window.UndoManager.addAction({
+            type: 'subtask_create',
+            data: {
+              subtaskId: data.subtask.id
+            }
+          })
+        }
+        
         // Hide input, add new subtask to list, keep panel open
         this.cancelSubtaskInput()
         this.addSubtaskToList(data.subtask)
@@ -1409,6 +1418,8 @@ export default class extends Controller {
     const textSpan = document.createElement('span')
     textSpan.className = 'subtask-text'
     textSpan.textContent = subtask.title
+    textSpan.setAttribute('data-action', 'dblclick->task-card#editSubtaskText')
+    textSpan.setAttribute('data-subtask-id', subtask.id)
     
     // Create delete button
     const deleteBtn = document.createElement('button')
@@ -1461,6 +1472,7 @@ export default class extends Controller {
     const checkbox = event.currentTarget
     const subtaskId = checkbox.dataset.subtaskId
     const isChecked = checkbox.classList.contains('checked')
+    const taskId = this.element.dataset.taskId
     
     // Toggle visual state immediately
     if (isChecked) {
@@ -1470,7 +1482,6 @@ export default class extends Controller {
     }
     
     try {
-      const taskId = this.element.dataset.taskId
       const response = await fetch(`/tasks/${taskId}/toggle_subtask/${subtaskId}`, {
         method: 'PATCH',
         headers: {
@@ -1480,7 +1491,18 @@ export default class extends Controller {
         }
       })
       
-      if (!response.ok) {
+      if (response.ok) {
+        // Add to undo stack
+        if (window.UndoManager) {
+          window.UndoManager.addAction({
+            type: 'subtask_toggle',
+            data: {
+              parentTaskId: taskId,
+              subtaskId: subtaskId
+            }
+          })
+        }
+      } else {
         // Revert visual state if request failed
         if (isChecked) {
           checkbox.classList.add('checked')
@@ -1508,21 +1530,12 @@ export default class extends Controller {
     const subtaskItem = deleteBtn.closest('.subtask-item')
     const subtaskText = subtaskItem.querySelector('.subtask-text').textContent
     const isCompleted = subtaskItem.querySelector('.subtask-checkbox').classList.contains('checked')
-    
-    // Store deleted subtask info for undo
-    this.lastDeletedSubtask = {
-      id: subtaskId,
-      title: subtaskText,
-      completed: isCompleted,
-      position: Array.from(subtaskItem.parentNode.children).indexOf(subtaskItem),
-      deletedAt: Date.now()
-    }
+    const taskId = this.element.dataset.taskId
     
     // Remove the subtask item from DOM immediately
     subtaskItem.remove()
     
     try {
-      const taskId = this.element.dataset.taskId
       const response = await fetch(`/tasks/${subtaskId}`, {
         method: 'DELETE',
         headers: {
@@ -1533,6 +1546,21 @@ export default class extends Controller {
       })
       
       if (response.ok) {
+        // Add to undo stack
+        if (window.UndoManager) {
+          window.UndoManager.addAction({
+            type: 'subtask_delete',
+            data: {
+              parentTaskId: taskId,
+              subtaskData: {
+                id: subtaskId,
+                title: subtaskText,
+                completed: isCompleted
+              }
+            }
+          })
+        }
+        
         // Check if there are any subtasks left
         const remainingSubtasks = this.subtaskListTarget.querySelectorAll('.subtask-item')
         if (remainingSubtasks.length === 0) {
@@ -1543,73 +1571,120 @@ export default class extends Controller {
           }
         }
       } else {
-        // If deletion failed, restore the item
+        // If deletion failed, restore the item by recreating it
         console.error('Failed to delete subtask')
-        this.undoSubtaskDeletion()
+        this.addSubtaskToList({ id: subtaskId, title: subtaskText })
+        if (isCompleted) {
+          const checkbox = this.element.querySelector(`[data-subtask-id="${subtaskId}"]`)
+          if (checkbox) checkbox.classList.add('checked')
+        }
       }
     } catch (error) {
       console.error('Error deleting subtask:', error)
       // Restore on error
-      this.undoSubtaskDeletion()
-    }
-  }
-
-  handleUndoKeypress(event) {
-    // Check for Ctrl+Z (Windows/Linux) or Cmd+Z (Mac)
-    if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
-      // Only handle undo if this task card has a recently deleted subtask
-      if (this.lastDeletedSubtask && (Date.now() - this.lastDeletedSubtask.deletedAt) < 30000) { // 30 second window
-        event.preventDefault()
-        this.undoSubtaskDeletion()
+      this.addSubtaskToList({ id: subtaskId, title: subtaskText })
+      if (isCompleted) {
+        const checkbox = this.element.querySelector(`[data-subtask-id="${subtaskId}"]`)
+        if (checkbox) checkbox.classList.add('checked')
       }
     }
   }
 
-  async undoSubtaskDeletion() {
-    if (!this.lastDeletedSubtask) return
+  editSubtaskText(event) {
+    event.preventDefault()
     
-    const deletedSubtask = this.lastDeletedSubtask
+    const textSpan = event.currentTarget
+    const subtaskId = textSpan.dataset.subtaskId
+    const currentText = textSpan.textContent
     
-    try {
-      // Re-create the subtask
-      const taskId = this.element.dataset.taskId
-      const response = await fetch(`/tasks/${taskId}/create_subtask`, {
-        method: 'POST',
-        headers: {
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          title: deletedSubtask.title
-        })
-      })
-
-      const data = await response.json()
+    // Don't allow editing if already in edit mode
+    if (textSpan.querySelector('input')) {
+      return
+    }
+    
+    // Create input element
+    const input = document.createElement('input')
+    input.type = 'text'
+    input.className = 'subtask-text-input'
+    input.value = currentText
+    
+    // Handle save and cancel
+    const saveEdit = async () => {
+      const newText = input.value.trim()
       
-      if (response.ok && data.success) {
-        // Ensure subtask area exists
-        if (!this.hasSubtaskContentTarget) {
-          this.createSubtaskArea()
+      if (newText && newText !== currentText) {
+        // Add to undo stack before making changes
+        if (window.UndoManager) {
+          window.UndoManager.addAction({
+            type: 'task_edit',
+            data: {
+              taskId: subtaskId,
+              previousData: { title: currentText },
+              field: 'title'
+            }
+          })
         }
         
-        // Add the restored subtask to the list
-        this.addSubtaskToList(data.subtask)
-        
-        // If it was completed, mark it as completed
-        if (deletedSubtask.completed) {
-          const restoredItem = this.subtaskListTarget.querySelector(`[data-subtask-id="${data.subtask.id}"]`)
-          if (restoredItem) {
-            restoredItem.click() // Toggle to completed state
+        try {
+          const response = await fetch(`/tasks/${subtaskId}`, {
+            method: 'PATCH',
+            headers: {
+              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              task: { title: newText }
+            })
+          })
+          
+          if (response.ok) {
+            textSpan.textContent = newText
+          } else {
+            // Revert on error
+            textSpan.textContent = currentText
+            console.error('Failed to update subtask')
           }
+        } catch (error) {
+          console.error('Error updating subtask:', error)
+          textSpan.textContent = currentText
         }
-        
-        // Clear the undo data
-        this.lastDeletedSubtask = null
+      } else {
+        // Revert to original text
+        textSpan.textContent = currentText
       }
-    } catch (error) {
-      console.error('Error restoring subtask:', error)
+      
+      // Remove input and restore text
+      input.remove()
+      textSpan.style.display = ''
     }
+    
+    const cancelEdit = () => {
+      input.remove()
+      textSpan.style.display = ''
+      textSpan.textContent = currentText
+    }
+    
+    // Event handlers
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        saveEdit()
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        cancelEdit()
+      }
+    })
+    
+    input.addEventListener('blur', saveEdit)
+    
+    // Replace text with input
+    textSpan.style.display = 'none'
+    textSpan.parentNode.insertBefore(input, textSpan.nextSibling)
+    
+    // Focus and select text
+    input.focus()
+    input.select()
   }
 
 } 

@@ -2633,6 +2633,26 @@ body.dragging-active .task-cards-container {
 
 .subtask-text {
   flex: 1;
+  cursor: text;
+}
+
+/* Subtask text input - matches main task title styling */
+.subtask-text-input {
+  flex: 1;
+  font-size: 14px;
+  color: #374151;
+  border: none;
+  background: rgba(59, 130, 246, 0.05);
+  outline: none;
+  line-height: 1.4;
+  padding: 2px 4px;
+  border-radius: 2px;
+  margin: -2px -4px;
+}
+
+.subtask-text-input:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 /* Subtask delete button */

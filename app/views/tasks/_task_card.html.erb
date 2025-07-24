@@ -205,7 +205,9 @@
                       data-subtask-id="<%= subtask.id %>">
                 <%= check_icon(size: :sm, css_class: "check-icon") %>
               </button>
-              <span class="subtask-text"><%= subtask.title %></span>
+              <span class="subtask-text" 
+                    data-action="dblclick->task-card#editSubtaskText"
+                    data-subtask-id="<%= subtask.id %>"><%= subtask.title %></span>
               <button type="button" class="subtask-delete" 
                       data-action="click->task-card#deleteSubtask"
                       data-subtask-id="<%= subtask.id %>"
