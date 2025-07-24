@@ -1687,4 +1687,222 @@ export default class extends Controller {
     input.select()
   }
 
+  openUnpackModal(event) {
+    event.preventDefault()
+    
+    // Create modal HTML (without data-action attributes)
+    const modalHTML = `
+      <div class="unpack-backdrop">
+        <div class="unpack-modal">
+          <div class="profile-modal-header">
+            <h3 class="profile-modal-title">Unpack Subtasks</h3>
+            <button type="button" class="profile-modal-close unpack-close-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <div class="profile-modal-content">
+            <div class="brain-dump-input-container">
+              <label class="brain-dump-label">Enter subtasks (one per line or separated by commas):</label>
+              <textarea class="brain-dump-textarea unpack-textarea" 
+                        placeholder="Clean desk
+Review project notes
+Update status report
+
+Or: Call client, Review docs, Send email"
+                        rows="8"></textarea>
+              <p class="brain-dump-help">💡 Each line or comma-separated item will become a subtask</p>
+            </div>
+            <div class="profile-modal-actions">
+              <button type="button" class="btn-cancel unpack-cancel-btn">
+                Cancel
+              </button>
+              <button type="button" class="btn-save unpack-save-btn">
+                Add All Subtasks
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+    
+    // Add to DOM
+    document.body.insertAdjacentHTML('beforeend', modalHTML)
+    
+    // Get references to the modal elements
+    const backdrop = document.querySelector('.unpack-backdrop')
+    const modal = document.querySelector('.unpack-modal')
+    const closeBtn = modal.querySelector('.unpack-close-btn')
+    const cancelBtn = modal.querySelector('.unpack-cancel-btn')
+    const saveBtn = modal.querySelector('.unpack-save-btn')
+    const textarea = modal.querySelector('.unpack-textarea')
+    
+    // Add event listeners
+    closeBtn.addEventListener('click', () => {
+      console.log('Close button clicked')
+      this.closeUnpackModal()
+    })
+    cancelBtn.addEventListener('click', () => {
+      console.log('Cancel button clicked')
+      this.closeUnpackModal()
+    })
+    saveBtn.addEventListener('click', () => {
+      console.log('Save button clicked')
+      this.processUnpackSubtasks()
+    })
+    
+    // Close on backdrop click
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        this.closeUnpackModal()
+      }
+    })
+    
+    // Close on Escape key
+    this.handleEscapeKey = (e) => {
+      if (e.key === 'Escape') {
+        this.closeUnpackModal()
+      }
+    }
+    document.addEventListener('keydown', this.handleEscapeKey)
+    
+    // Show modal
+    setTimeout(() => {
+      backdrop.classList.add('show')
+      modal.classList.add('show')
+      
+      // Focus textarea
+      if (textarea) textarea.focus()
+    }, 10)
+  }
+
+  closeUnpackModal() {
+    console.log('closeUnpackModal called')
+    const backdrop = document.querySelector('.unpack-backdrop')
+    const modal = document.querySelector('.unpack-modal')
+    
+    console.log('Found backdrop:', !!backdrop, 'Found modal:', !!modal)
+    
+    if (backdrop && modal) {
+      backdrop.classList.remove('show')
+      modal.classList.remove('show')
+      
+      setTimeout(() => {
+        backdrop.remove()
+      }, 200)
+    }
+    
+    // Remove escape key listener
+    if (this.handleEscapeKey) {
+      document.removeEventListener('keydown', this.handleEscapeKey)
+      this.handleEscapeKey = null
+    }
+  }
+
+  async processUnpackSubtasks() {
+    const textarea = document.querySelector('.unpack-textarea')
+    if (!textarea) {
+      console.error('Textarea not found')
+      return
+    }
+    
+    const text = textarea.value.trim()
+    
+    if (!text) {
+      alert('Please enter some subtasks to create')
+      return
+    }
+    
+    // Parse text into individual subtasks
+    let subtasks = []
+    
+    // Split by newlines first
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
+    
+    // Then split each line by commas if it contains commas
+    lines.forEach(line => {
+      if (line.includes(',')) {
+        const commaSplit = line.split(',').map(item => item.trim()).filter(item => item.length > 0)
+        subtasks.push(...commaSplit)
+      } else {
+        subtasks.push(line)
+      }
+    })
+    
+    if (subtasks.length === 0) {
+      alert('Please enter some subtasks to create')
+      return
+    }
+    
+    // Create subtasks one by one
+    const taskId = this.element.dataset.taskId
+    let createdCount = 0
+    
+    try {
+      for (const subtaskTitle of subtasks) {
+        const response = await fetch(`/tasks/${taskId}/create_subtask`, {
+          method: 'POST',
+          headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            title: subtaskTitle
+          })
+        })
+        
+        const data = await response.json()
+        
+        if (response.ok && data.success) {
+          createdCount++
+          
+          // Add to undo stack
+          if (window.UndoManager) {
+            window.UndoManager.addAction({
+              type: 'subtask_create',
+              data: {
+                subtaskId: data.subtask.id
+              }
+            })
+          }
+          
+          // Ensure subtask area exists
+          if (!this.hasSubtaskContentTarget) {
+            this.createSubtaskArea()
+          }
+          
+          // Add subtask to list
+          this.addSubtaskToList(data.subtask)
+        }
+      }
+      
+      // Show success message and close modal
+      if (createdCount > 0) {
+        // Expand subtask panel if it exists
+        if (this.hasSubtaskContentTarget) {
+          const content = this.subtaskContentTarget
+          const subtaskArea = content.closest('.subtask-area')
+          
+          if (!content.classList.contains('expanded')) {
+            content.classList.add('expanded')
+            subtaskArea.classList.add('expanded')
+          }
+        }
+        
+        this.closeUnpackModal()
+        
+        // Show success feedback
+        console.log(`Created ${createdCount} subtask${createdCount !== 1 ? 's' : ''}`)
+      } else {
+        alert('Failed to create any subtasks')
+      }
+      
+    } catch (error) {
+      console.error('Error creating subtasks:', error)
+      alert('Failed to create subtasks')
+    }
+  }
+
 } 

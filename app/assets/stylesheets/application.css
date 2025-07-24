@@ -1756,6 +1756,14 @@ body {
   font-weight: 200;
 }
 
+.unpack-btn::after {
+  content: "≫";
+  font-size: 10px;
+  font-weight: 200;
+  transform: rotate(90deg);
+  display: inline-block;
+}
+
 /* Input Field with Calendar Icon */
 .date-input .calendar-icon {
   position: absolute;
@@ -2097,6 +2105,55 @@ body {
 .features li:before {
   content: "✨";
   margin-right: 8px;
+}
+
+/* Unpack Subtasks Modal */
+.unpack-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  width: 550px;
+  max-width: 90vw;
+  max-height: 85vh;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  z-index: 1100;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.unpack-modal.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: auto;
+}
+
+.unpack-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1099;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.unpack-backdrop.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 

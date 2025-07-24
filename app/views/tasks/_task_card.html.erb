@@ -151,6 +151,10 @@
                 data-action="click->task-card#addSubtask">
           <%= plus_icon(size: :sm) %>
         </button>
+        <button type="button" class="card-action-btn unpack-btn" 
+                title="Unpack subtasks"
+                data-action="click->task-card#openUnpackModal">
+        </button>
         <button type="button" class="card-action-btn park-btn" 
                 title="<%= task.status == 'parked' ? 'Unpark task' : 'Park task' %>"
                 data-action="click->task-card#parkTask">
