@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "form", "titleInput", "dueDateInput", "cognitiveDensityInput", 
-    "estimatedHoursInput"
+    "estimatedHoursInput", "subtaskContent", "subtaskList"
   ]
 
   connect() {
@@ -198,9 +198,17 @@ export default class extends Controller {
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
-          // Remove the entire wrapper (or just the task card if no wrapper)
+          // Remove the main task card
           const wrapper = this.element.closest('.task-card-wrapper')
           const elementToRemove = wrapper || this.element
+          
+          // Also remove the associated subtask area (if it exists)
+          const subtaskArea = elementToRemove.nextElementSibling
+          if (subtaskArea && subtaskArea.classList.contains('subtask-area')) {
+            subtaskArea.remove()
+          }
+          
+          // Remove the main task element
           elementToRemove.remove()
           
           // Update all counters if counts are provided
@@ -294,7 +302,18 @@ export default class extends Controller {
     
     // Remove element after animation
     setTimeout(() => {
-      this.element.remove()
+      // Remove main task card
+      const wrapper = this.element.closest('.task-card-wrapper')
+      const elementToRemove = wrapper || this.element
+      
+      // Also remove the associated subtask area (if it exists)
+      const subtaskArea = elementToRemove.nextElementSibling
+      if (subtaskArea && subtaskArea.classList.contains('subtask-area')) {
+        subtaskArea.remove()
+      }
+      
+      // Remove the main task element
+      elementToRemove.remove()
       
       // Notify parent controller about task removal
       this.notifyParentOfDeletion()
@@ -1146,8 +1165,18 @@ export default class extends Controller {
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
-          // Remove task card from current section
-          this.element.remove()
+          // Remove the main task card
+          const wrapper = this.element.closest('.task-card-wrapper')
+          const elementToRemove = wrapper || this.element
+          
+          // Also remove the associated subtask area (if it exists)
+          const subtaskArea = elementToRemove.nextElementSibling
+          if (subtaskArea && subtaskArea.classList.contains('subtask-area')) {
+            subtaskArea.remove()
+          }
+          
+          // Remove the main task element
+          elementToRemove.remove()
           
           // Update counters if available
           if (data.counts && window.DashboardCounters) {
@@ -1207,6 +1236,64 @@ export default class extends Controller {
       simplicitySelect.style.borderColor = ''
       impactSelect.style.borderColor = ''
     }, 3000)
+  }
+
+  // Subtask functionality
+  async addSubtask(event) {
+    event.preventDefault()
+    
+    const title = prompt("Enter subtask title:")
+    if (!title || !title.trim()) {
+      return
+    }
+    
+    try {
+      const taskId = this.element.dataset.taskId
+      const response = await fetch(`/tasks/${taskId}/create_subtask`, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          title: title.trim()
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok && data.success) {
+        // Reload the page to show the new subtask area
+        window.location.reload()
+      } else {
+        alert(data.error || "Failed to create subtask")
+      }
+    } catch (error) {
+      console.error("Error creating subtask:", error)
+      alert("Failed to create subtask")
+    }
+  }
+
+  toggleSubtasks(event) {
+    event.preventDefault()
+    
+    if (!this.hasSubtaskContentTarget || !this.hasSubtaskListTarget) {
+      return
+    }
+    
+    const content = this.subtaskContentTarget
+    const list = this.subtaskListTarget
+    
+    if (content.classList.contains('expanded')) {
+      // Collapse
+      content.classList.remove('expanded')
+      list.style.display = 'none'
+    } else {
+      // Expand
+      content.classList.add('expanded')
+      list.style.display = 'block'
+    }
   }
 
 } 

@@ -2502,6 +2502,52 @@ body.dragging-active .task-cards-container {
   min-height: 12px;
   max-height: 12px;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+/* Expanded state */
+.subtask-content.expanded {
+  max-height: 200px;
+}
+
+/* Chevron in center of peek area */
+.subtask-chevron {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #64748b;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.subtask-chevron svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Rotate chevron when expanded */
+.subtask-content.expanded .subtask-chevron {
+  transform: translate(-50%, -50%) rotate(180deg);
+}
+
+/* Subtask List */
+.subtask-list {
+  padding: 8px 12px;
+  margin-top: 12px;
+}
+
+.subtask-item {
+  padding: 4px 0;
+  font-size: 14px;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.subtask-item:last-child {
+  border-bottom: none;
 }
 
 
