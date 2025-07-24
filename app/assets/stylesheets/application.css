@@ -2497,6 +2497,11 @@ body.dragging-active .task-cards-container {
   border-radius: 0 0 8px 8px;
 }
 
+/* Task Card Wrapper - Contains both main card and subtask area */
+.task-card-wrapper {
+  /* No styling needed - just a container for Stimulus controller scope */
+}
+
 /* Subtask Content - The 12px peek strip */
 .subtask-content {
   min-height: 12px;
@@ -2533,14 +2538,23 @@ body.dragging-active .task-cards-container {
   transform: translate(-50%, -50%) rotate(180deg);
 }
 
-/* Subtask List */
+/* Subtask List - Animation */
 .subtask-list {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  padding: 0 12px;
+}
+
+/* Expanded subtask list */
+.subtask-content.expanded .subtask-list {
+  max-height: 200px;
+  border-top: 1px solid #e2e8f0;
   padding: 8px 12px;
-  margin-top: 12px;
 }
 
 .subtask-item {
-  padding: 4px 0;
+  padding: 6px 0;
   font-size: 14px;
   color: #374151;
   border-bottom: 1px solid #e5e7eb;

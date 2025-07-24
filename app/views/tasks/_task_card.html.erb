@@ -1,4 +1,5 @@
-<div class="task-card" data-task-id="<%= task.id %>" data-status="<%= task.status %>" data-controller="task-card" draggable="true">
+<div class="task-card-wrapper" data-controller="task-card" data-task-id="<%= task.id %>">
+<div class="task-card" data-task-id="<%= task.id %>" data-status="<%= task.status %>" draggable="true">
   <%= form_with model: task, local: false, 
       data: { 
         task_card_target: "form",
@@ -177,25 +178,26 @@
   
 </div>
 
-<% if task.subtasks.any? %>
-  <!-- Subtask Area - Creates "behind card" visual effect (separate from main card) -->
-  <div class="subtask-area">
-    <div class="subtask-content" data-task-card-target="subtaskContent" data-action="click->task-card#toggleSubtasks">
-      <!-- Chevron in center of peek area -->
-      <div class="subtask-chevron">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M6 9l6 6 6-6"/>
-        </svg>
-      </div>
-      
-      <!-- Subtask List (hidden by default) -->
-      <div class="subtask-list" data-task-card-target="subtaskList">
-        <% task.subtasks.each do |subtask| %>
-          <div class="subtask-item">
-            <%= subtask.title %>
-          </div>
-        <% end %>
+  <% if task.subtasks.any? %>
+    <!-- Subtask Area - Creates "behind card" visual effect (separate from main card) -->
+    <div class="subtask-area">
+      <div class="subtask-content" data-task-card-target="subtaskContent" data-action="click->task-card#toggleSubtasks">
+        <!-- Chevron in center of peek area -->
+        <div class="subtask-chevron">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </div>
+        
+        <!-- Subtask List (animated with CSS) -->
+        <div class="subtask-list" data-task-card-target="subtaskList">
+          <% task.subtasks.each do |subtask| %>
+            <div class="subtask-item">
+              <%= subtask.title %>
+            </div>
+          <% end %>
+        </div>
       </div>
     </div>
-  </div>
-<% end %> 
+  <% end %>
+</div> 

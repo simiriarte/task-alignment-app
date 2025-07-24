@@ -7,7 +7,6 @@ export default class extends Controller {
   ]
 
   connect() {
-    console.log("Task card controller connected")
     this.saveTimeout = null
     
     // Check if task is already marked as focus task and apply highlight
@@ -1278,21 +1277,19 @@ export default class extends Controller {
   toggleSubtasks(event) {
     event.preventDefault()
     
-    if (!this.hasSubtaskContentTarget || !this.hasSubtaskListTarget) {
+    if (!this.hasSubtaskContentTarget) {
       return
     }
     
     const content = this.subtaskContentTarget
-    const list = this.subtaskListTarget
     
+    // Simply toggle the expanded class - CSS handles the animation
     if (content.classList.contains('expanded')) {
       // Collapse
       content.classList.remove('expanded')
-      list.style.display = 'none'
     } else {
       // Expand
       content.classList.add('expanded')
-      list.style.display = 'block'
     }
   }
 
