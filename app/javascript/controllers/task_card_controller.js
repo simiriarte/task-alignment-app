@@ -15,7 +15,6 @@ export default class extends Controller {
     if (focusCheckbox && focusCheckbox.classList.contains('checked')) {
       this.element.classList.add('focus-task-active')
     }
-    
   }
 
   disconnect() {
@@ -181,9 +180,11 @@ export default class extends Controller {
       const taskId = this.element.dataset.taskId
       
       // Store the current DOM element HTML and position for potential undo
-      const taskHtml = this.element.outerHTML
-      const nextElement = this.element.nextElementSibling
-      const parentElement = this.element.parentElement
+      const wrapper = this.element.closest('.task-card-wrapper')
+      const elementToStore = wrapper || this.element
+      const taskHtml = elementToStore.outerHTML
+      const nextElement = elementToStore.nextElementSibling
+      const parentElement = elementToStore.parentElement
       
       const response = await fetch(`/tasks/${taskId}`, {
         method: 'DELETE',
@@ -197,8 +198,10 @@ export default class extends Controller {
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
-          // Remove the task card from DOM
-          this.element.remove()
+          // Remove the entire wrapper (or just the task card if no wrapper)
+          const wrapper = this.element.closest('.task-card-wrapper')
+          const elementToRemove = wrapper || this.element
+          elementToRemove.remove()
           
           // Update all counters if counts are provided
           if (data.counts && window.DashboardCounters) {

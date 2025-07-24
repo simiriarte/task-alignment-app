@@ -1122,19 +1122,19 @@ body {
 /* New Task Card Layout */
 .task-card {
   background: white;
-  border-radius: 10px;
-  padding: 10px 10px 16px 10px;
+  border-radius: 10px 10px 10px 10px;
+  padding: 8px 8px 12px 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  margin: 4px 4px 10px 4px;
+  margin: 4px 4px 0px 4px;
   position: relative;
   border-left: 6px solid #9ca3af;
   border: 1px solid #e2e8f0;
-  min-height: 102px;
-  max-height: 102px;
+  min-height: 85px;
   display: flex;
   flex-direction: column;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 
 /* Task card maintains its complete visual integrity */
 
@@ -2485,11 +2485,24 @@ body.dragging-active .task-cards-container {
   20%, 40%, 60%, 80% { transform: translateX(3px); }
 }
 
-/* Subtask Panel Styling */
+/* Subtask "Behind Card" Visual Effect */
 
-/* Task card maintains its complete visual integrity */
-.task-card {
-  position: relative;
-  overflow: visible;
+/* Subtask Area - Creates the behind card container */
+.subtask-area {
+  margin: 0 12px 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-top: none;
+  margin-top: -1px;
+  border-radius: 0 0 8px 8px;
 }
+
+/* Subtask Content - The 12px peek strip */
+.subtask-content {
+  min-height: 12px;
+  max-height: 12px;
+  cursor: pointer;
+}
+
+
 

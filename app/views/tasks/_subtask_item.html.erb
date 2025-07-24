@@ -1,0 +1,20 @@
+<div class="subtask-item" data-subtask-id="<%= subtask.id %>">
+  <div class="subtask-drag-handle">
+    <svg class="drag-dots" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="5" cy="12" r="2"/>
+      <circle cx="12" cy="12" r="2"/>
+      <circle cx="19" cy="12" r="2"/>
+      <circle cx="5" cy="5" r="2"/>
+      <circle cx="12" cy="5" r="2"/>
+      <circle cx="19" cy="5" r="2"/>
+    </svg>
+  </div>
+  <input type="checkbox" 
+         class="subtask-checkbox" 
+         <%= 'checked' if subtask.status == 'completed' %>
+         data-action="change->task-card#toggleSubtaskStatus"
+         data-subtask-id="<%= subtask.id %>">
+  <span class="subtask-title <%= 'completed' if subtask.status == 'completed' %>">
+    <%= subtask.title %>
+  </span>
+</div>

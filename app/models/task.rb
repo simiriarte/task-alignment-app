@@ -1,5 +1,11 @@
 class Task < ApplicationRecord
   belongs_to :user
+  
+  # Associations for subtasks
+  has_many :subtasks, -> { where(is_subtask: true).order(:position) }, 
+           class_name: "Task", 
+           primary_key: :task_group_id, 
+           foreign_key: :task_group_id
 
   # Validations
   validates :title, presence: true
@@ -24,12 +30,21 @@ class Task < ApplicationRecord
             allow_nil: true
   validates :time_spent, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
+  # Scopes
+  scope :main_tasks, -> { where(is_subtask: false) }
+  scope :subtasks_only, -> { where(is_subtask: true) }
+
   # Callbacks
-  before_save :calculate_score_and_update_status
+  before_create :set_task_group_id, unless: :is_subtask
+  before_save :calculate_score_and_update_status, unless: :is_subtask
 
 
 
   private
+  
+  def set_task_group_id
+    self.task_group_id = SecureRandom.uuid
+  end
 
   def calculate_score_and_update_status
     # Only calculate score if we have all three rating components

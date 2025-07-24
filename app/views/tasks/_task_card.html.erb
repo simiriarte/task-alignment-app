@@ -146,7 +146,8 @@
       
       <!-- Action Buttons -->
       <div class="card-actions">
-        <button type="button" class="card-action-btn" title="Add subtask">
+        <button type="button" class="card-action-btn" title="Add subtask"
+                data-action="click->task-card#addSubtask">
           <%= plus_icon(size: :sm) %>
         </button>
         <button type="button" class="card-action-btn park-btn" 
@@ -174,4 +175,10 @@
     
   <% end %>
   
+</div>
+
+<!-- Subtask Area - Creates "behind card" visual effect (separate from main card) -->
+<div class="subtask-area">
+  <div class="subtask-content">
+  </div>
 </div> 

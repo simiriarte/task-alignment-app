@@ -4,20 +4,20 @@ class TasksController < ApplicationController
 
   # GET /tasks
   def index
-    @tasks = current_user.tasks.order(created_at: :desc)
+    @tasks = current_user.tasks.main_tasks.order(created_at: :desc)
 
     # Progressive disclosure: determine which sections should be active
-    @has_unrated_tasks = current_user.tasks.where(status: "unrated").exists?
-    @has_rated_tasks = current_user.tasks.where(status: "rated").exists?
-    @has_parked_tasks = current_user.tasks.where(status: "parked").exists?
-    @has_completed_tasks = current_user.tasks.where(status: "completed").exists?
+    @has_unrated_tasks = current_user.tasks.main_tasks.where(status: "unrated").exists?
+    @has_rated_tasks = current_user.tasks.main_tasks.where(status: "rated").exists?
+    @has_parked_tasks = current_user.tasks.main_tasks.where(status: "parked").exists?
+    @has_completed_tasks = current_user.tasks.main_tasks.where(status: "completed").exists?
 
     # Task counts for each section
-    @unrated_count = current_user.tasks.where(status: "unrated").count
-    @rated_count = current_user.tasks.where(status: "rated").count
-    @parked_count = current_user.tasks.where(status: "parked").count
-    @completed_count = current_user.tasks.where(status: "completed").count
-    @total_tasks = current_user.tasks.count
+    @unrated_count = current_user.tasks.main_tasks.where(status: "unrated").count
+    @rated_count = current_user.tasks.main_tasks.where(status: "rated").count
+    @parked_count = current_user.tasks.main_tasks.where(status: "parked").count
+    @completed_count = current_user.tasks.main_tasks.where(status: "completed").count
+    @total_tasks = current_user.tasks.main_tasks.count
   end
 
   # GET /tasks/1
@@ -48,7 +48,7 @@ class TasksController < ApplicationController
           if params[:inline]
             # For inline creation, return the task card HTML
             task_html = render_to_string(partial: "task_card", locals: { task: @task }, formats: [ :html ])
-            unrated_count = current_user.tasks.where(status: "unrated", parent_task_id: nil).count
+            unrated_count = current_user.tasks.main_tasks.where(status: "unrated").count
             render json: {
               success: true,
               task_html: task_html,
@@ -77,10 +77,10 @@ class TasksController < ApplicationController
     if @task.update(task_params)
       # Calculate updated counts in case status changed
       updated_counts = {
-        unrated_count: current_user.tasks.where(status: "unrated").count,
-        rated_count: current_user.tasks.where(status: "rated").count,
-        parked_count: current_user.tasks.where(status: "parked").count,
-        completed_count: current_user.tasks.where(status: "completed").count
+        unrated_count: current_user.tasks.main_tasks.where(status: "unrated").count,
+        rated_count: current_user.tasks.main_tasks.where(status: "rated").count,
+        parked_count: current_user.tasks.main_tasks.where(status: "parked").count,
+        completed_count: current_user.tasks.main_tasks.where(status: "completed").count
       }
       
       respond_to do |format|
@@ -111,10 +111,10 @@ class TasksController < ApplicationController
     
     # Calculate updated counts after deletion
     updated_counts = {
-      unrated_count: current_user.tasks.where(status: "unrated").count,
-      rated_count: current_user.tasks.where(status: "rated").count,
-      parked_count: current_user.tasks.where(status: "parked").count,
-      completed_count: current_user.tasks.where(status: "completed").count
+      unrated_count: current_user.tasks.main_tasks.where(status: "unrated").count,
+      rated_count: current_user.tasks.main_tasks.where(status: "rated").count,
+      parked_count: current_user.tasks.main_tasks.where(status: "parked").count,
+      completed_count: current_user.tasks.main_tasks.where(status: "completed").count
     }
     
     respond_to do |format|
@@ -207,10 +207,10 @@ class TasksController < ApplicationController
       
       # Calculate updated counts after brain dump
       updated_counts = {
-        unrated_count: current_user.tasks.where(status: "unrated").count,
-        rated_count: current_user.tasks.where(status: "rated").count,
-        parked_count: current_user.tasks.where(status: "parked").count,
-        completed_count: current_user.tasks.where(status: "completed").count
+        unrated_count: current_user.tasks.main_tasks.where(status: "unrated").count,
+        rated_count: current_user.tasks.main_tasks.where(status: "rated").count,
+        parked_count: current_user.tasks.main_tasks.where(status: "parked").count,
+        completed_count: current_user.tasks.main_tasks.where(status: "completed").count
       }
       
       respond_to do |format|
@@ -245,6 +245,67 @@ class TasksController < ApplicationController
       format.html { redirect_to tasks_url, alert: error_message }
       format.json { render json: { success: false, error: error_message } }
     end
+  end
+
+  # POST /tasks/:id/create_subtask
+  def create_subtask
+    @parent_task = current_user.tasks.find(params[:id])
+    
+    # Validate subtask title
+    if params[:title].blank?
+      render json: { success: false, error: "Subtask title cannot be empty" }, status: :unprocessable_entity
+      return
+    end
+    
+    # Get next position for ordering
+    max_position = @parent_task.subtasks.maximum(:position) || -1
+    
+    @subtask = current_user.tasks.build(
+      title: params[:title],
+      task_group_id: @parent_task.task_group_id,
+      is_subtask: true,
+      position: max_position + 1,
+      status: "unrated",
+      cognitive_density: 0,
+      estimated_hours: 0
+    )
+    
+    if @subtask.save
+      render json: {
+        success: true,
+        subtask: @subtask.as_json(only: [:id, :title, :is_subtask, :position]),
+        subtask_html: render_to_string(partial: "subtask_item", locals: { subtask: @subtask }, formats: [:html])
+      }
+    else
+      render json: { success: false, errors: @subtask.errors.full_messages }, status: :unprocessable_entity
+    end
+  rescue ActiveRecord::RecordNotFound
+    render json: { success: false, error: "Task not found" }, status: :not_found
+  end
+
+  # PATCH /tasks/:id/toggle_subtask
+  def toggle_subtask
+    @subtask = current_user.tasks.find(params[:id])
+    
+    unless @subtask.is_subtask
+      render json: { success: false, error: "Task is not a subtask" }, status: :unprocessable_entity
+      return
+    end
+    
+    # Toggle between unrated and completed for subtasks
+    new_status = @subtask.status == "completed" ? "unrated" : "completed"
+    
+    if @subtask.update(status: new_status)
+      render json: {
+        success: true,
+        status: new_status,
+        subtask: @subtask.as_json(only: [:id, :title, :status])
+      }
+    else
+      render json: { success: false, errors: @subtask.errors.full_messages }, status: :unprocessable_entity
+    end
+  rescue ActiveRecord::RecordNotFound
+    render json: { success: false, error: "Subtask not found" }, status: :not_found
   end
 
   # POST /tasks/undo_delete
