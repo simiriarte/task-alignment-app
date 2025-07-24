@@ -1855,12 +1855,12 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
   z-index: 1099;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
 
@@ -1875,18 +1875,18 @@ body {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(0.9);
-  width: 550px;
+  transform: translate(-50%, -50%) scale(0.95);
+  width: 480px;
   max-width: 90vw;
-  max-height: 85vh;
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
+  max-height: 80vh;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02);
   z-index: 1100;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   pointer-events: none;
 }
@@ -1898,65 +1898,44 @@ body {
   pointer-events: auto;
 }
 
-/* Brain Dump Modal Header */
+/* Compact brain dump modal header - future-ready for color customization 
+   Custom properties for theming:
+   --brain-dump-header-bg: Header background color
+   --brain-dump-header-text: Header text color  
+   --brain-dump-header-close: Close button color
+   --brain-dump-header-close-hover: Close button hover color
+*/
 .brain-dump-modal .profile-modal-header {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #4a3b5c 50%, #3a2a4c 100%);
-  background-size: 200% 200%;
-  animation: gradientShift 6s ease infinite;
-  padding: 20px 24px;
+  background: var(--brain-dump-header-bg, #ffffff);
+  border-bottom: 1px solid #f3f4f6;
+  padding: 14px 20px;
   border-radius: 16px 16px 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-  overflow: hidden;
-}
-
-.brain-dump-modal .profile-modal-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
-  transform: translateX(-100%);
-  animation: shimmer 3s ease-in-out infinite;
-}
-
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  min-height: auto;
 }
 
 .brain-dump-modal .profile-modal-title {
-  color: white;
-  font-size: 18px;
+  color: var(--brain-dump-header-text, #111827);
+  font-size: 15px;
   font-weight: 600;
   margin: 0;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 380px;
 }
 
 .brain-dump-modal .profile-modal-close {
-  background: rgba(255, 255, 255, 0.1);
+  background: none;
   border: none;
-  border-radius: 8px;
-  padding: 8px;
-  cursor: pointer;
-  color: rgba(255, 255, 255, 0.8);
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 0;
+  padding: 4px;
+  color: var(--brain-dump-header-close, #6b7280);
+  transition: color 0.15s ease;
 }
 
 .brain-dump-modal .profile-modal-close:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+  color: var(--brain-dump-header-close-hover, #374151);
 }
 
 .brain-dump-modal .profile-modal-close svg {
@@ -1966,13 +1945,15 @@ body {
 
 /* Brain Dump Modal Content */
 .brain-dump-modal .profile-modal-content {
-  padding: 24px;
-  max-height: calc(85vh - 140px);
+  padding: 20px 20px 18px 20px;
+  max-height: calc(80vh - 120px);
   overflow-y: auto;
 }
 
+/* Compact brain dump modal styles */
 .brain-dump-input-container {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  position: relative;
 }
 
 .brain-dump-label {
@@ -2086,116 +2067,54 @@ body {
 .brain-dump-textarea {
   width: 100%;
   padding: 16px;
-  border: 2px solid var(--border-color);
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   font-size: 14px;
   font-family: 'Figtree', sans-serif;
   line-height: 1.5;
-  resize: vertical;
-  min-height: 140px;
-  background: white;
   color: var(--text-primary);
-  outline: none;
+  background: #fafbfc;
+  resize: vertical;
+  min-height: 120px;
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
 
 .brain-dump-textarea:focus {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+  outline: none;
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .brain-dump-textarea::placeholder {
-  color: var(--text-muted);
-  font-style: italic;
+  color: #9ca3af;
+  font-style: normal;
 }
 
-.brain-dump-help {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin: 12px 0 0 0;
-  line-height: 1.4;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.brain-dump-help::before {
-  content: "💡";
-  font-size: 14px;
+.brain-dump-instruction {
+  position: absolute;
+  bottom: -20px;
+  left: 4px;
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 400;
 }
 
 /* Brain Dump Modal Actions */
 .brain-dump-modal .profile-modal-actions {
   display: flex;
-  gap: 12px;
-  justify-content: flex-end;
+  gap: 14px;
+  justify-content: space-between;
+  align-items: center;
   padding-top: 20px;
-  border-top: 1px solid var(--border-light);
-  margin-top: 24px;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 0;
 }
 
-.brain-dump-modal .btn-cancel {
-  padding: 12px 20px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: white;
-  color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: 'Figtree', sans-serif;
-}
+/* Brain dump modal uses global modern button styles */
 
-.brain-dump-modal .btn-cancel:hover {
-  background: var(--background-color);
-  border-color: var(--text-muted);
-}
-
-.brain-dump-modal .btn-save {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  background: var(--primary-color);
-  color: white;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: 'Figtree', sans-serif;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.brain-dump-modal .btn-save:hover {
-  background: var(--primary-hover);
-}
-
-.brain-dump-modal .btn-save:disabled {
-  background: var(--text-muted);
-  cursor: not-allowed;
-}
-
-/* Keyboard shortcut hint */
-.keyboard-hint {
-  font-size: 11px;
-  color: var(--text-light);
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.keyboard-hint kbd {
-  background: var(--background-color);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 10px;
-  font-family: monospace;
-}
+/* Brain dump modal uses global keyboard-shortcut-hint styles */
 
 .brain-dump-errors {
   margin-bottom: 16px;

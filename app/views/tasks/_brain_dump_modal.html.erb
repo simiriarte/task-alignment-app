@@ -13,7 +13,9 @@
       <h3 class="profile-modal-title">Brain Dump Tasks</h3>
       <button class="profile-modal-close" 
               data-action="click->brain-dump#closeModal">
-        <%= close_icon(css_class: "icon") %>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 18L18 6M6 6l12 12"/>
+        </svg>
       </button>
     </div>
     <div class="profile-modal-content">
@@ -31,23 +33,18 @@
         </div>
         
         <div class="brain-dump-input-container">
-          <label for="brain_dump_text" class="brain-dump-label">
-            Enter one task per line:
-          </label>
           <%= form.text_area :brain_dump_text, 
-              rows: 8, 
+              rows: 6, 
               placeholder: "Write documentation\nFix login bug\nReview pull request\nDeploy to staging", 
               class: "brain-dump-textarea",
               data: { brain_dump_target: "textarea" },
               required: true %>
-          <p class="brain-dump-help">
-            Each line will become a separate task. Empty lines will be ignored.
-          </p>
+          <div class="brain-dump-instruction">One per line or comma-separated</div>
         </div>
         
         <div class="profile-modal-actions">
-          <div class="keyboard-hint">
-            <kbd>⌘</kbd><kbd>Enter</kbd> to submit
+          <div class="keyboard-shortcut-hint">
+            ⌘↵ or Ctrl+↵ to add all
           </div>
           <button type="button" 
                   class="btn-cancel" 
