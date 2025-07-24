@@ -890,40 +890,58 @@ body {
 /* Profile Modal Actions */
 .profile-modal-actions {
   display: flex;
-  gap: 12px;
-  justify-content: flex-end;
+  gap: 14px;
+  justify-content: space-between;
+  align-items: center;
   padding-top: 20px;
-  border-top: 1px solid var(--border-light);
+  border-top: 1px solid #f3f4f6;
 }
 
+/* Keyboard shortcut hint */
+.keyboard-shortcut-hint {
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 400;
+  flex: 1;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Button group for modal actions */
+.profile-modal-actions > .btn-cancel,
+.profile-modal-actions > .btn-save {
+  flex-shrink: 0;
+}
+
+/* Modern minimal buttons */
 .btn-cancel {
-  padding: 12px 20px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: white;
-  color: var(--text-secondary);
-  font-size: 14px;
+  padding: 10px 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #6b7280;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   font-family: 'Figtree', sans-serif;
 }
 
 .btn-cancel:hover {
-  background: var(--background-color);
-  border-color: var(--text-muted);
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
 }
 
 .btn-save {
-  padding: 12px 24px;
+  padding: 10px 20px;
   border: none;
-  border-radius: 8px;
-  background: var(--primary-color);
+  border-radius: 10px;
+  background: #3b82f6;
   color: white;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   font-family: 'Figtree', sans-serif;
   display: flex;
   align-items: center;
@@ -931,7 +949,7 @@ body {
 }
 
 .btn-save:hover {
-  background: var(--primary-hover);
+  background: #2563eb;
 }
 
 .btn-save:disabled {
@@ -1965,6 +1983,106 @@ body {
   margin-bottom: 8px;
 }
 
+/* Muted instruction text for subtler appearance */
+.brain-dump-label.muted-instruction {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+/* Compact unpack modal styles */
+.unpack-input-container {
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.unpack-textarea {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: 'Figtree', sans-serif;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: #fafbfc;
+  resize: vertical;
+  min-height: 120px;
+  transition: all 0.2s ease;
+}
+
+.unpack-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.unpack-textarea::placeholder {
+  color: #9ca3af;
+  font-style: normal;
+}
+
+.unpack-instruction {
+  position: absolute;
+  bottom: -20px;
+  left: 4px;
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+/* Compact unpack modal header - future-ready for color customization 
+   Custom properties for theming:
+   --unpack-header-bg: Header background color
+   --unpack-header-text: Header text color  
+   --unpack-header-close: Close button color
+   --unpack-header-close-hover: Close button hover color
+*/
+.unpack-modal .profile-modal-header {
+  background: var(--unpack-header-bg, #ffffff);
+  border-bottom: 1px solid #f3f4f6;
+  padding: 14px 20px;
+  border-radius: 16px 16px 0 0;
+  min-height: auto;
+}
+
+.unpack-modal .profile-modal-title {
+  color: var(--unpack-header-text, #111827);
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 380px;
+}
+
+.unpack-modal .profile-modal-close {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 4px;
+  color: var(--unpack-header-close, #6b7280);
+  transition: color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.unpack-modal .profile-modal-close:hover {
+  color: var(--unpack-header-close-hover, #374151);
+}
+
+.unpack-modal .profile-modal-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.unpack-modal .profile-modal-content {
+  padding: 20px 20px 18px 20px;
+}
+
 .brain-dump-textarea {
   width: 100%;
   padding: 16px;
@@ -2112,18 +2230,18 @@ body {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(0.9);
-  width: 550px;
+  transform: translate(-50%, -50%) scale(0.95);
+  width: 480px;
   max-width: 90vw;
-  max-height: 85vh;
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
+  max-height: 80vh;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02);
   z-index: 1100;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   pointer-events: none;
 }
@@ -2141,12 +2259,12 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
   z-index: 1099;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
 

@@ -1690,12 +1690,15 @@ export default class extends Controller {
   openUnpackModal(event) {
     event.preventDefault()
     
+    // Get the task title for context
+    const taskTitle = this.titleInputTarget.value || 'Untitled Task'
+    
     // Create modal HTML (without data-action attributes)
     const modalHTML = `
       <div class="unpack-backdrop">
         <div class="unpack-modal">
           <div class="profile-modal-header">
-            <h3 class="profile-modal-title">Unpack Subtasks</h3>
+            <h3 class="profile-modal-title">Unpack: ${taskTitle}</h3>
             <button type="button" class="profile-modal-close unpack-close-btn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M6 18L18 6M6 6l12 12"/>
@@ -1703,18 +1706,18 @@ export default class extends Controller {
             </button>
           </div>
           <div class="profile-modal-content">
-            <div class="brain-dump-input-container">
-              <label class="brain-dump-label">Enter subtasks (one per line or separated by commas):</label>
-              <textarea class="brain-dump-textarea unpack-textarea" 
+            <div class="unpack-input-container">
+              <textarea class="unpack-textarea" 
                         placeholder="Clean desk
 Review project notes
-Update status report
-
-Or: Call client, Review docs, Send email"
-                        rows="8"></textarea>
-              <p class="brain-dump-help">💡 Each line or comma-separated item will become a subtask</p>
+Update status report"
+                        rows="6"></textarea>
+              <div class="unpack-instruction">One per line or comma-separated</div>
             </div>
             <div class="profile-modal-actions">
+              <div class="keyboard-shortcut-hint">
+                ⌘↵ or Ctrl+↵ to add all
+              </div>
               <button type="button" class="btn-cancel unpack-cancel-btn">
                 Cancel
               </button>
@@ -1759,12 +1762,21 @@ Or: Call client, Review docs, Send email"
       }
     })
     
-    // Close on Escape key
+    // Close on Escape key and handle Cmd/Ctrl+Enter
     this.handleEscapeKey = (e) => {
       if (e.key === 'Escape') {
         this.closeUnpackModal()
       }
     }
+    
+    // Handle keyboard shortcuts in textarea
+    textarea.addEventListener('keydown', (e) => {
+      // Handle Cmd+Enter (Mac) or Ctrl+Enter (PC)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault()
+        this.processUnpackSubtasks()
+      }
+    })
     document.addEventListener('keydown', this.handleEscapeKey)
     
     // Show modal
