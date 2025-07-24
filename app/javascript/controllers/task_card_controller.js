@@ -1282,14 +1282,17 @@ export default class extends Controller {
     }
     
     const content = this.subtaskContentTarget
+    const subtaskArea = content.closest('.subtask-area')
     
-    // Simply toggle the expanded class - CSS handles the animation
+    // Toggle expanded class on both the content (for panel) and area (for chevron)
     if (content.classList.contains('expanded')) {
       // Collapse
       content.classList.remove('expanded')
+      subtaskArea.classList.remove('expanded')
     } else {
       // Expand
       content.classList.add('expanded')
+      subtaskArea.classList.add('expanded')
     }
   }
 

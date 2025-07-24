@@ -181,15 +181,15 @@
   <% if task.subtasks.any? %>
     <!-- Subtask Area - Creates "behind card" visual effect (separate from main card) -->
     <div class="subtask-area">
-      <div class="subtask-content" data-task-card-target="subtaskContent" data-action="click->task-card#toggleSubtasks">
-        <!-- Chevron in center of peek area -->
-        <div class="subtask-chevron">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M6 9l6 6 6-6"/>
-          </svg>
-        </div>
-        
-        <!-- Subtask List (animated with CSS) -->
+      <!-- Fixed Chevron - Always stays in same position -->
+      <div class="subtask-chevron" data-action="click->task-card#toggleSubtasks">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </div>
+      
+      <!-- Expanding Panel - Only this part animates -->
+      <div class="subtask-content" data-task-card-target="subtaskContent">
         <div class="subtask-list" data-task-card-target="subtaskList">
           <% task.subtasks.each do |subtask| %>
             <div class="subtask-item">

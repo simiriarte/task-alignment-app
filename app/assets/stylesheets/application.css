@@ -2495,6 +2495,7 @@ body.dragging-active .task-cards-container {
   border-top: none;
   margin-top: -1px;
   border-radius: 0 0 8px 8px;
+  position: relative;
 }
 
 /* Task Card Wrapper - Contains both main card and subtask area */
@@ -2502,29 +2503,15 @@ body.dragging-active .task-cards-container {
   /* No styling needed - just a container for Stimulus controller scope */
 }
 
-/* Subtask Content - The 12px peek strip with smooth animations */
-.subtask-content {
-  min-height: 12px;
-  max-height: 12px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: max-height 0.3s ease-in-out;
-}
-
-/* Expanded state - smooth transition */
-.subtask-content.expanded {
-  max-height: 200px;
-}
-
-/* Chevron in center of peek area with instant vertical flip */
+/* Fixed Chevron - Always stays in same position (12px strip) */
 .subtask-chevron {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scaleY(1);
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #64748b;
   cursor: pointer;
+  transform: scaleY(1);
 }
 
 .subtask-chevron svg {
@@ -2533,8 +2520,20 @@ body.dragging-active .task-cards-container {
 }
 
 /* Vertical flip when expanded - no rotation */
-.subtask-content.expanded .subtask-chevron {
-  transform: translate(-50%, -50%) scaleY(-1);
+.subtask-area.expanded .subtask-chevron {
+  transform: scaleY(-1);
+}
+
+/* Expanding Panel - Only this animates (starts collapsed) */
+.subtask-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+}
+
+/* Expanded state - smooth transition */
+.subtask-content.expanded {
+  max-height: 200px;
 }
 
 /* Subtask List - Static styling, no animations */
