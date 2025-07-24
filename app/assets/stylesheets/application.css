@@ -2629,19 +2629,30 @@ body.dragging-active .task-cards-container {
   background: #ffffff; /* White background for content area */
 }
 
-/* Expanded state - smooth transition */
+/* Expanded state - smooth transition with hidden scrolling */
 .subtask-content.expanded {
   max-height: 200px;
+  overflow-y: auto;
+  /* Smooth scrolling behavior */
+  scroll-behavior: smooth;
+  /* Hide scrollbar for WebKit browsers (Chrome, Safari, Edge) */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer/Edge */
 }
 
-/* Subtask List - Static styling, no animations */
+/* Hide scrollbar for WebKit browsers */
+.subtask-content.expanded::-webkit-scrollbar {
+  display: none;
+}
+
+/* Subtask List - Static styling, no animations, optimized for scrolling */
 .subtask-list {
-  padding: 0 12px;
+  padding: 6px 12px;
 }
 
 /* Subtask Input Container */
 .subtask-input-container {
-  padding: 8px 0;
+  padding: 4px 0;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -2650,11 +2661,11 @@ body.dragging-active .task-cards-container {
   width: 100%;
   padding: 0;
   border: none;
-  font-size: 14px;
+  font-size: 12px;
   color: #374151;
   background: transparent;
   outline: none;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .subtask-input:focus {
@@ -2668,29 +2679,29 @@ body.dragging-active .task-cards-container {
 }
 
 .subtask-item {
-  padding: 8px 0;
-  font-size: 14px;
+  padding: 4px 0;
+  font-size: 12px;
   color: #374151;
   border-bottom: 1px solid #e5e7eb;
-  line-height: 1.4;
+  line-height: 1.3;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .subtask-item:first-child {
-  padding-top: 8px;
+  padding-top: 6px;
 }
 
 .subtask-item:last-child {
   border-bottom: none;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
 }
 
-/* Subtask checkbox - gray version of focus task checkbox */
+/* Subtask checkbox - smaller, gray version of focus task checkbox */
 .subtask-checkbox {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   margin: 0;
   padding: 0;
   border: 1px solid #9ca3af;
@@ -2711,8 +2722,8 @@ body.dragging-active .task-cards-container {
   transition: all 0.2s ease;
   color: white;
   stroke-width: 3;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 .subtask-checkbox.checked {
@@ -2755,12 +2766,12 @@ body.dragging-active .task-cards-container {
   border: none;
   color: #9ca3af;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1;
   padding: 0;
   margin: 0;
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
