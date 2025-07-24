@@ -1357,7 +1357,7 @@ export default class extends Controller {
     const input = document.createElement('input')
     input.type = 'text'
     input.className = 'subtask-input'
-    input.placeholder = 'Enter subtask title...'
+    input.placeholder = 'new subtask'
     input.setAttribute('data-task-card-target', 'subtaskInput')
     input.setAttribute('data-action', 'keydown->task-card#handleSubtaskInput')
     

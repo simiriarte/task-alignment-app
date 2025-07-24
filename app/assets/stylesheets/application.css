@@ -2551,21 +2551,26 @@ body.dragging-active .task-cards-container {
   border-bottom: 1px solid #e5e7eb;
 }
 
-/* Subtask Input Field */
+/* Subtask Input Field - Subtle inline style like task titles */
 .subtask-input {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  padding: 0;
+  border: none;
   font-size: 14px;
-  background: #ffffff;
+  color: #374151;
+  background: transparent;
   outline: none;
-  transition: border-color 0.2s ease;
+  line-height: 1.4;
 }
 
 .subtask-input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+  box-shadow: none;
+}
+
+.subtask-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 .subtask-item {
