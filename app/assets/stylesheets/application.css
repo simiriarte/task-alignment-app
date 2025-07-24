@@ -2502,30 +2502,29 @@ body.dragging-active .task-cards-container {
   /* No styling needed - just a container for Stimulus controller scope */
 }
 
-/* Subtask Content - The 12px peek strip */
+/* Subtask Content - The 12px peek strip with smooth animations */
 .subtask-content {
   min-height: 12px;
   max-height: 12px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: max-height 0.3s ease;
+  transition: max-height 0.3s ease-in-out;
 }
 
-/* Expanded state */
+/* Expanded state - smooth transition */
 .subtask-content.expanded {
   max-height: 200px;
 }
 
-/* Chevron in center of peek area */
+/* Chevron in center of peek area with instant vertical flip */
 .subtask-chevron {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scaleY(1);
   color: #64748b;
   cursor: pointer;
-  transition: transform 0.3s ease;
 }
 
 .subtask-chevron svg {
@@ -2533,24 +2532,15 @@ body.dragging-active .task-cards-container {
   height: 12px;
 }
 
-/* Rotate chevron when expanded */
+/* Vertical flip when expanded - no rotation */
 .subtask-content.expanded .subtask-chevron {
-  transform: translate(-50%, -50%) rotate(180deg);
+  transform: translate(-50%, -50%) scaleY(-1);
 }
 
-/* Subtask List - Animation */
+/* Subtask List - Static styling, no animations */
 .subtask-list {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-  padding: 0 12px;
-}
-
-/* Expanded subtask list */
-.subtask-content.expanded .subtask-list {
-  max-height: 200px;
-  border-top: 1px solid #e2e8f0;
   padding: 8px 12px;
+  border-top: 1px solid #e2e8f0;
 }
 
 .subtask-item {
