@@ -203,21 +203,7 @@
           </div>
           
           <% task.subtasks.each do |subtask| %>
-            <div class="subtask-item">
-              <button type="button" class="subtask-checkbox <%= 'checked' if subtask.completed? %>" 
-                      data-action="click->task-card#toggleSubtaskComplete"
-                      data-subtask-id="<%= subtask.id %>">
-                <%= check_icon(size: :sm, css_class: "check-icon") %>
-              </button>
-              <span class="subtask-text" 
-                    data-action="dblclick->task-card#editSubtaskText"
-                    data-subtask-id="<%= subtask.id %>"><%= subtask.title %></span>
-              <button type="button" class="subtask-delete" 
-                      data-action="click->task-card#deleteSubtask"
-                      data-subtask-id="<%= subtask.id %>"
-                      title="Delete subtask">
-              </button>
-            </div>
+            <%= render 'subtask_item', subtask: subtask %>
           <% end %>
         </div>
       </div>

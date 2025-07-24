@@ -43,6 +43,11 @@ class Task < ApplicationRecord
     status == 'completed'
   end
 
+  def parent_task
+    return nil unless is_subtask && task_group_id.present?
+    Task.where(task_group_id: task_group_id, is_subtask: false).first
+  end
+
 
 
   private

@@ -1398,6 +1398,27 @@ export default class extends Controller {
     // Create new subtask item element
     const subtaskItem = document.createElement('div')
     subtaskItem.className = 'subtask-item'
+    subtaskItem.setAttribute('data-subtask-id', subtask.id)
+    
+    // Create 6-dot drag handle - THIS IS THE DRAGGABLE ELEMENT
+    const dragHandle = document.createElement('div')
+    dragHandle.className = 'subtask-drag-handle'
+    dragHandle.setAttribute('draggable', 'true')
+    dragHandle.setAttribute('data-controller', 'subtask-drag')
+    dragHandle.setAttribute('data-subtask-drag-subtask-id-value', subtask.id)
+    dragHandle.setAttribute('data-subtask-drag-parent-task-id-value', this.element.dataset.taskId)
+    dragHandle.setAttribute('data-subtask-drag-title-value', subtask.title)
+    dragHandle.setAttribute('title', 'Drag to convert to main task')
+    dragHandle.innerHTML = `
+      <svg class="drag-dots-6" viewBox="0 0 12 16" fill="currentColor">
+        <circle cx="3" cy="4" r="1"/>
+        <circle cx="9" cy="4" r="1"/>
+        <circle cx="3" cy="8" r="1"/>
+        <circle cx="9" cy="8" r="1"/>
+        <circle cx="3" cy="12" r="1"/>
+        <circle cx="9" cy="12" r="1"/>
+      </svg>
+    `
     
     // Create checkbox
     const checkbox = document.createElement('button')
@@ -1430,6 +1451,7 @@ export default class extends Controller {
     deleteBtn.setAttribute('title', 'Delete subtask')
     
     // Assemble subtask item
+    subtaskItem.appendChild(dragHandle)
     subtaskItem.appendChild(checkbox)
     subtaskItem.appendChild(textSpan)
     subtaskItem.appendChild(deleteBtn)

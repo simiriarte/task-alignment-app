@@ -2788,5 +2788,112 @@ body.dragging-active .task-cards-container {
   font-weight: 400;
 }
 
+/* Subtask 6-Dot Drag Handle - ONLY THIS IS DRAGGABLE */
+.subtask-drag-handle {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: #d1d5db;
+  transition: all 0.2s ease;
+  margin-right: 6px;
+  padding: 2px;
+  border-radius: 2px;
+  /* Ensure handle is interactive and draggable */
+  pointer-events: auto !important;
+  user-select: none;
+  -webkit-user-drag: element;
+}
+
+.subtask-drag-handle:hover {
+  color: #9ca3af;
+  background-color: rgba(249, 250, 251, 0.8);
+}
+
+.subtask-drag-handle:active,
+.subtask-drag-handle[draggable="true"]:active {
+  cursor: grabbing;
+  background-color: rgba(229, 231, 235, 0.8);
+}
+
+.subtask-drag-handle .drag-dots-6 {
+  width: 12px;
+  height: 14px;
+  pointer-events: none; /* SVG doesn't block mouse events on parent */
+}
+
+/* Subtask item layout - draggable but cursor controlled by handle */
+.subtask-item {
+  transition: all 0.2s ease;
+  border-radius: 3px;
+}
+
+.subtask-item:hover {
+  background-color: rgba(249, 250, 251, 0.5);
+}
+
+
+.subtask-item.dragging {
+  opacity: 0.6;
+  transform: rotate(2deg);
+  z-index: 1000;
+}
+
+/* Subtask drag preview */
+.subtask-drag-preview {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #374151;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Enhanced drop zone styling - fixed clipping */
+.dashboard-section.valid-drop-zone {
+  background-color: #f0f9ff !important;
+  border: 2px dashed #0ea5e9 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  z-index: 10;
+}
+
+.dashboard-section.drag-over {
+  background-color: #e0f2fe !important;
+  border: 2px solid #0ea5e9 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.25) !important;
+}
+
+.dashboard-section.valid-drop-zone .section-title {
+  color: #0ea5e9;
+  font-weight: 600;
+}
+
+.dashboard-section.drag-over .section-title {
+  color: #0369a1;
+}
+
+/* Add visual indicator when dragging subtasks */
+body.dragging-active .dashboard-section:not(.valid-drop-zone) {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+body.dragging-active .subtask-item:not(.dragging) {
+  opacity: 0.7;
+}
+
 
 

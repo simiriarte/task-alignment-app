@@ -90,7 +90,7 @@
       
       <!-- Top Left: Filter Tasks (Always Active) -->
       <div class="dashboard-section filter-tasks section-active" 
-           data-controller="filter-tasks" 
+           data-controller="filter-tasks filter-tasks-drop" 
            data-filter-tasks-url-value="<%= tasks_path %>"
            data-drag-drop-target="dropZone" data-status="unrated"
            data-resizable-dashboard-target="section">
@@ -181,6 +181,7 @@
 
       <!-- Bottom Left: Parked Tasks -->
       <div class="dashboard-section parked-tasks <%= 'section-dimmed' unless @has_parked_tasks %>" 
+           data-controller="parked-tasks-drop"
            data-drag-drop-target="dropZone" data-status="parked"
            data-resizable-dashboard-target="section">
         <div class="section-header">

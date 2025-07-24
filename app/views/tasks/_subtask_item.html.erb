@@ -1,20 +1,36 @@
 <div class="subtask-item" data-subtask-id="<%= subtask.id %>">
-  <div class="subtask-drag-handle">
-    <svg class="drag-dots" viewBox="0 0 24 24" fill="currentColor">
-      <circle cx="5" cy="12" r="2"/>
-      <circle cx="12" cy="12" r="2"/>
-      <circle cx="19" cy="12" r="2"/>
-      <circle cx="5" cy="5" r="2"/>
-      <circle cx="12" cy="5" r="2"/>
-      <circle cx="19" cy="5" r="2"/>
+  
+  <!-- 6-dot drag handle on far left - ONLY THIS IS DRAGGABLE -->
+  <div class="subtask-drag-handle" 
+       draggable="true"
+       data-controller="subtask-drag"
+       data-subtask-drag-subtask-id-value="<%= subtask.id %>"
+       data-subtask-drag-parent-task-id-value="<%= subtask.parent_task&.id || subtask.task_group_id %>"
+       data-subtask-drag-title-value="<%= subtask.title %>"
+       title="Drag to convert to main task">
+    <svg class="drag-dots-6" viewBox="0 0 12 16" fill="currentColor">
+      <circle cx="3" cy="4" r="1"/>
+      <circle cx="9" cy="4" r="1"/>
+      <circle cx="3" cy="8" r="1"/>
+      <circle cx="9" cy="8" r="1"/>
+      <circle cx="3" cy="12" r="1"/>
+      <circle cx="9" cy="12" r="1"/>
     </svg>
   </div>
-  <input type="checkbox" 
-         class="subtask-checkbox" 
-         <%= 'checked' if subtask.status == 'completed' %>
-         data-action="change->task-card#toggleSubtaskStatus"
-         data-subtask-id="<%= subtask.id %>">
-  <span class="subtask-title <%= 'completed' if subtask.status == 'completed' %>">
-    <%= subtask.title %>
-  </span>
+  
+  <button type="button" class="subtask-checkbox <%= 'checked' if subtask.completed? %>" 
+          data-action="click->task-card#toggleSubtaskComplete"
+          data-subtask-id="<%= subtask.id %>">
+    <%= check_icon(size: :sm, css_class: "check-icon") %>
+  </button>
+  
+  <span class="subtask-text" 
+        data-action="dblclick->task-card#editSubtaskText"
+        data-subtask-id="<%= subtask.id %>"><%= subtask.title %></span>
+        
+  <button type="button" class="subtask-delete" 
+          data-action="click->task-card#deleteSubtask"
+          data-subtask-id="<%= subtask.id %>"
+          title="Delete subtask">
+  </button>
 </div>

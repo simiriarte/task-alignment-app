@@ -353,7 +353,53 @@ class TasksController < ApplicationController
     end
   end
 
-
+  # POST /tasks/:id/convert_to_main_task
+  def convert_to_main_task
+    @subtask = current_user.tasks.find(params[:id])
+    
+    unless @subtask.is_subtask
+      render json: { success: false, error: "Task is not a subtask" }, status: :unprocessable_entity
+      return
+    end
+    
+    # Determine target status (default to "unrated" for Filter Tasks, or use specified status)
+    target_status = params[:target_status] || "unrated"
+    
+    # Convert subtask to main task
+    @subtask.update!(
+      is_subtask: false,
+      task_group_id: nil,
+      position: nil,
+      status: target_status,
+      energy: nil,
+      simplicity: nil,
+      impact: nil
+    )
+    
+    # Calculate updated counts
+    updated_counts = {
+      unrated_count: current_user.tasks.main_tasks.where(status: "unrated").count,
+      rated_count: current_user.tasks.main_tasks.where(status: "rated").count,
+      parked_count: current_user.tasks.main_tasks.where(status: "parked").count,
+      completed_count: current_user.tasks.main_tasks.where(status: "completed").count
+    }
+    
+    # Render the new task HTML
+    task_html = render_to_string(partial: "task_card", locals: { task: @subtask }, formats: [:html])
+    
+    render json: {
+      success: true,
+      message: "Subtask successfully converted to main task",
+      task: @subtask.as_json(only: [:id, :title, :status]),
+      task_html: task_html,
+      counts: updated_counts
+    }
+    
+  rescue ActiveRecord::RecordNotFound
+    render json: { success: false, error: "Subtask not found" }, status: :not_found
+  rescue => e
+    render json: { success: false, error: "Failed to convert subtask: #{e.message}" }, status: :internal_server_error
+  end
 
   private
 

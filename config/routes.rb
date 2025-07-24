@@ -9,6 +9,7 @@ Rails.application.routes.draw do
     member do
       post :duplicate
       post :create_subtask
+      post :convert_to_main_task
       patch "toggle_subtask/:subtask_id", action: :toggle_subtask
     end
   end
