@@ -2539,17 +2539,32 @@ body.dragging-active .task-cards-container {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Drag cursor for draggable items */
+/* Main Task Drag Styling */
 .task-card[draggable="true"] {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Only show grab cursor on non-interactive areas */
+.task-card[draggable="true"]:not(:hover) {
   cursor: grab;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.2s ease-out;
+}
+
+/* Don't show grab cursor when hovering over interactive elements */
+.task-card[draggable="true"] button,
+.task-card[draggable="true"] input,
+.task-card[draggable="true"] select,
+.task-card[draggable="true"] textarea,
+.task-card[draggable="true"] a {
+  cursor: pointer;
 }
 
 .task-card[draggable="true"]:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .task-card[draggable="true"]:active {
@@ -2559,25 +2574,21 @@ body.dragging-active .task-cards-container {
 .task-card.dragging {
   opacity: 0.7;
   z-index: 1000;
-  transition: opacity 0.2s ease-out;
+  transform: none !important;
+  transition: opacity 0.2s ease;
 }
 
-.task-card.dragging:hover,
-.task-card.drag-released:hover {
-  transform: none;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+.task-card.dragging:hover {
+  transform: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .task-card.drag-released {
   pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
-/* Shake animation for invalid drops */
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
-  20%, 40%, 60%, 80% { transform: translateX(3px); }
-}
+
 
 /* Subtask "Behind Card" Visual Effect */
 

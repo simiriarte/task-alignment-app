@@ -34,6 +34,9 @@ export default class extends Controller {
       title: this.titleValue
     })
     
+    // CRITICAL: Stop event propagation to prevent main task drag conflicts
+    event.stopPropagation()
+    
     // Set dragging flag
     this.isDragging = true
     
@@ -70,6 +73,9 @@ export default class extends Controller {
 
   dragEnd(event) {
     console.log('✅ Subtask drag ended')
+    
+    // CRITICAL: Stop event propagation to prevent main task drag conflicts
+    event.stopPropagation()
     
     // Clear dragging flag
     this.isDragging = false

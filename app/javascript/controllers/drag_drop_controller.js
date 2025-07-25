@@ -4,7 +4,7 @@ export default class extends Controller {
   static targets = ["dropZone"]
   
   connect() {
-    console.log("Drag and drop controller connected")
+    console.log("🔗 Main task drag controller connected")
     this.setupDragAndDrop()
     
     // Listen for custom refresh event
@@ -17,31 +17,89 @@ export default class extends Controller {
   }
 
   setupDragAndDrop() {
-    // Make all task cards draggable - search the entire dashboard
-    document.querySelectorAll('.task-card').forEach(card => {
+    console.log("🔧 Setting up main task drag and drop")
+    
+    // Make all task cards draggable
+    const taskCards = document.querySelectorAll('.task-card')
+    console.log(`🔧 Found ${taskCards.length} task cards to make draggable`)
+    
+    taskCards.forEach((card, index) => {
+      // Ensure draggable is set but with conditional cursor
       card.draggable = true
+      // Don't set cursor on the whole card - let CSS handle it contextually
+      
+      // Store bound handlers
+      if (!card._mainDragStartHandler) {
+        card._mainDragStartHandler = this.handleDragStart.bind(this)
+        card._mainDragEndHandler = this.handleDragEnd.bind(this)
+      }
       
       // Remove existing listeners to avoid duplicates
-      card.removeEventListener('dragstart', this.handleDragStart.bind(this))
-      card.removeEventListener('dragend', this.handleDragEnd.bind(this))
+      card.removeEventListener('dragstart', card._mainDragStartHandler)
+      card.removeEventListener('dragend', card._mainDragEndHandler)
       
       // Add fresh listeners
-      card.addEventListener('dragstart', this.handleDragStart.bind(this))
-      card.addEventListener('dragend', this.handleDragEnd.bind(this))
+      card.addEventListener('dragstart', card._mainDragStartHandler)
+      card.addEventListener('dragend', card._mainDragEndHandler)
+      
+      console.log(`✅ Task card ${index + 1} setup complete`)
     })
 
-    // Setup drop zones
-    this.dropZoneTargets.forEach(zone => {
-      zone.addEventListener('dragover', this.handleDragOver.bind(this))
-      zone.addEventListener('dragenter', this.handleDragEnter.bind(this))
-      zone.addEventListener('dragleave', this.handleDragLeave.bind(this))
-      zone.addEventListener('drop', this.handleDrop.bind(this))
+    // Setup drop zones with enhanced logging
+    console.log(`🔧 Setting up ${this.dropZoneTargets.length} drop zones`)
+    this.dropZoneTargets.forEach((zone, index) => {
+      const status = zone.dataset.status
+      console.log(`🔧 Setting up drop zone ${index + 1}: ${status}`)
+      
+      // Store bound handlers
+      if (!zone._dragOverHandler) {
+        zone._dragOverHandler = this.handleDragOver.bind(this)
+        zone._dragEnterHandler = this.handleDragEnter.bind(this)
+        zone._dragLeaveHandler = this.handleDragLeave.bind(this)
+        zone._dropHandler = this.handleDrop.bind(this)
+      }
+      
+      // Remove existing listeners
+      zone.removeEventListener('dragover', zone._dragOverHandler)
+      zone.removeEventListener('dragenter', zone._dragEnterHandler)
+      zone.removeEventListener('dragleave', zone._dragLeaveHandler)
+      zone.removeEventListener('drop', zone._dropHandler)
+      
+      // Add fresh listeners
+      zone.addEventListener('dragover', zone._dragOverHandler)
+      zone.addEventListener('dragenter', zone._dragEnterHandler)
+      zone.addEventListener('dragleave', zone._dragLeaveHandler)
+      zone.addEventListener('drop', zone._dropHandler)
+      
+      console.log(`✅ Drop zone ${index + 1} (${status}) setup complete`)
     })
   }
 
   handleDragStart(event) {
+    console.log('🚀 Main task drag start triggered')
+    
     const taskCard = event.target.closest('.task-card')
-    if (!taskCard) return
+    if (!taskCard) {
+      console.log('❌ No task card found')
+      return
+    }
+
+    // CRITICAL: Check if drag originated from a subtask drag handle
+    if (event.target.closest('.subtask-drag-handle')) {
+      console.log('❌ Drag from subtask handle, ignoring main task drag')
+      return
+    }
+
+    // CRITICAL: Check if drag originated from interactive elements
+    const interactiveElements = ['INPUT', 'BUTTON', 'SELECT', 'TEXTAREA', 'A']
+    if (interactiveElements.includes(event.target.tagName) || 
+        event.target.closest('input, button, select, textarea, a')) {
+      console.log('❌ Drag from interactive element, ignoring')
+      event.stopPropagation() // Stop the drag but don't prevent click
+      return
+    }
+
+    console.log('✅ Main task drag proceeding...')
 
     // Store task data for drop handling
     this.draggedTask = {
@@ -51,11 +109,11 @@ export default class extends Controller {
       hasRatings: this.hasAllRatings(taskCard)
     }
     
-    console.log('=== DRAG START DEBUG ===')
+    console.log('=== MAIN TASK DRAG DATA ===')
     console.log('Task ID:', this.draggedTask.taskId)
     console.log('Current Status:', this.draggedTask.currentStatus)
     console.log('Has Ratings:', this.draggedTask.hasRatings)
-    console.log('========================')
+    console.log('===========================')
 
     // Prevent scrollbars during drag
     document.body.classList.add('dragging-active')
@@ -63,17 +121,30 @@ export default class extends Controller {
     // Add visual feedback
     taskCard.classList.add('dragging')
     
-    // Set drag effect
+    // CRITICAL: Set drag data - use a unique identifier for main tasks
     event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData('text/html', taskCard.outerHTML)
+    event.dataTransfer.setData('application/json', JSON.stringify({
+      type: 'main-task',
+      taskId: this.draggedTask.taskId,
+      currentStatus: this.draggedTask.currentStatus,
+      hasRatings: this.draggedTask.hasRatings
+    }))
     
     // Show valid drop zones
     this.highlightValidDropZones()
     
-    console.log('Drag started:', this.draggedTask)
+    console.log('🚀 Main task drag started successfully')
   }
 
   handleDragEnd(event) {
+    console.log('🏁 Main task drag ended')
+    
+    // Check if drag originated from subtask handle
+    if (event.target.closest('.subtask-drag-handle')) {
+      console.log('❌ Drag end from subtask handle, ignoring')
+      return
+    }
+
     const taskCard = event.target.closest('.task-card')
     if (taskCard) {
       taskCard.classList.remove('dragging')
@@ -91,161 +162,154 @@ export default class extends Controller {
     // Remove all drop zone highlights
     this.removeAllDropZoneHighlights()
     this.draggedTask = null
+    
+    console.log('✅ Main task drag end cleanup complete')
   }
 
   handleDragOver(event) {
-    event.preventDefault() // Allow drop
+    event.preventDefault() // CRITICAL: Allow drop
     event.dataTransfer.dropEffect = 'move'
+    
+    // More aggressive prevention to ensure drop works
+    event.stopPropagation()
+    
+    // Debug logging (can be removed later)
+    // console.log('📍 Drag over zone:', event.target.closest('[data-drag-drop-target="dropZone"]')?.dataset.status)
   }
 
   handleDragEnter(event) {
     event.preventDefault()
     const dropZone = event.target.closest('[data-drag-drop-target="dropZone"]')
-    if (dropZone && this.isValidDropZone(dropZone)) {
-      dropZone.classList.add('drag-over')
+    if (dropZone) {
+      console.log('🎯 Drag entered zone:', dropZone.dataset.status)
+      if (this.isValidDropZone(dropZone)) {
+        dropZone.classList.add('drag-over')
+        console.log('✅ Zone highlighted as valid drop target')
+      } else {
+        console.log('❌ Zone is not valid for this task')
+      }
     }
   }
 
   handleDragLeave(event) {
     const dropZone = event.target.closest('[data-drag-drop-target="dropZone"]')
-    if (dropZone) {
-      // Only remove highlight if we're actually leaving the drop zone
-      const rect = dropZone.getBoundingClientRect()
-      const x = event.clientX
-      const y = event.clientY
-      
-      if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-        dropZone.classList.remove('drag-over')
-      }
+    if (dropZone && !dropZone.contains(event.relatedTarget)) {
+      dropZone.classList.remove('drag-over')
+      console.log('👋 Left drop zone:', dropZone.dataset.status)
     }
   }
 
   async handleDrop(event) {
     event.preventDefault()
+    event.stopPropagation() // Prevent other drop handlers from interfering
+    console.log('🎯 MAIN TASK DROP EVENT TRIGGERED!')
     
     const dropZone = event.target.closest('[data-drag-drop-target="dropZone"]')
-    if (!dropZone || !this.draggedTask) return
+    if (!dropZone) {
+      console.log('❌ No drop zone found')
+      return
+    }
 
     const targetStatus = dropZone.dataset.status
+    console.log('🎯 Dropping in zone:', targetStatus)
 
-    // Remove drop zone highlights
+    // Remove drop zone highlights immediately
     this.removeAllDropZoneHighlights()
+
+    // Get drag data - handle both main task and potential subtask data
+    let dragData
+    try {
+      const jsonData = event.dataTransfer.getData('application/json')
+      if (jsonData) {
+        dragData = JSON.parse(jsonData)
+        console.log('📦 Parsed drag data:', dragData)
+      }
+    } catch (error) {
+      console.log('⚠️ Could not parse JSON drag data, checking HTML data')
+    }
+
+    // If this is a subtask drag, let the subtask drop controllers handle it
+    if (dragData && dragData.type === 'subtask') {
+      console.log('🔄 Subtask drop detected, letting subtask controllers handle it')
+      return
+    }
+
+    // Check if we have a main task drag in progress
+    if (!this.draggedTask) {
+      console.log('❌ No main task drag in progress - might be subtask or other drag')
+      return
+    }
+
+    // Verify this is actually our main task drag
+    if (!dragData || dragData.type !== 'main-task') {
+      console.log('❌ Not a main task drag, ignoring')
+      return
+    }
+
+    console.log('🎯 Processing main task drop...')
 
     // Don't process if dropping in same section
     if (this.draggedTask.currentStatus === targetStatus) {
-      console.log('Dropped in same section, ignoring')
+      console.log('↩️ Dropped in same section, ignoring')
       return
     }
 
     // Validate the drop
     const newStatus = this.getNewStatusForDrop(targetStatus)
     if (!newStatus) {
-      console.log('Invalid drop, showing error feedback')
+      console.log('❌ Invalid drop target')
       this.showInvalidDropFeedback()
       return
     }
 
+    console.log('✅ Valid drop! Updating task status to:', newStatus)
+
     // Perform the status update
-    await this.updateTaskStatus(this.draggedTask.taskId, newStatus)
+    await this.updateTaskStatus(this.draggedTask.taskId, newStatus, targetStatus)
   }
 
   getNewStatusForDrop(targetStatus) {
+    if (!this.draggedTask) return null
+    
     const { currentStatus, hasRatings } = this.draggedTask
     
-    console.log('=== DROP VALIDATION DEBUG ===')
-    console.log('Current Status:', currentStatus)
-    console.log('Target Status:', targetStatus)
+    console.log('=== DROP VALIDATION ===')
+    console.log('From:', currentStatus, '→ To:', targetStatus)
     console.log('Has Ratings:', hasRatings)
 
     switch (currentStatus) {
       case 'unrated':
-        // Filter tasks (unrated) can go to parked, or to priorities if they have ratings
-        if (targetStatus === 'parked') {
-          console.log('✅ ALLOWING: unrated → parked')
-          return 'parked'
-        }
-        if (targetStatus === 'rated' && hasRatings) {
-          console.log('✅ ALLOWING: unrated (with ratings) → priorities')
-          return 'rated'
-        }
-        if (targetStatus === 'rated' && !hasRatings) {
-          console.log('❌ BLOCKING: unrated (no ratings) → priorities')
-          this.highlightMissingRatings()
-          return null
-        }
-        console.log('❌ BLOCKING: unrated → ' + targetStatus)
-        return null
+        if (targetStatus === 'parked') return 'parked'
+        if (targetStatus === 'rated' && hasRatings) return 'rated'
+        if (targetStatus === 'completed') return 'completed'
+        break
         
       case 'rated':
-        // Rated tasks (including prioritized) can go to prioritized, parked, or completed
-        if (targetStatus === 'rated') {
-          // Check if task actually has ratings before allowing move to prioritized
-          if (hasRatings) {
-            return 'rated' // Move to prioritized
-          } else {
-            // Show red borders for missing ratings
-            this.highlightMissingRatings()
-            return null
-          }
-        }
-        if (targetStatus === 'parked') {
-          return 'parked'
-        }
-        if (targetStatus === 'completed') {
-          return 'completed'
-        }
-        return null
+        if (targetStatus === 'parked') return 'parked'
+        if (targetStatus === 'completed') return 'completed'
+        if (targetStatus === 'unrated') return 'unrated'
+        break
         
       case 'parked':
-        // Parked tasks behavior depends on if they have ratings
-        if (hasRatings) {
-          // Parked (rated) can go to prioritized or completed
-          if (targetStatus === 'rated') {
-            return 'rated' // Move to prioritized
-          }
-          if (targetStatus === 'completed') {
-            return 'completed'
-          }
-        } else {
-          // Parked (unrated) can only go to completed
-          if (targetStatus === 'completed') {
-            return 'completed'
-          }
-          // If trying to move to prioritized without ratings, show feedback
-          if (targetStatus === 'rated') {
-            this.highlightMissingRatings()
-            return null
-          }
-        }
-        return null
+        if (targetStatus === 'rated' && hasRatings) return 'rated'
+        if (targetStatus === 'completed') return 'completed'
+        if (targetStatus === 'unrated') return 'unrated'
+        break
         
       case 'completed':
-        // Completed tasks can go back to prioritized or parked (undo mistakes)
-        if (targetStatus === 'rated') {
-          return 'rated' // Move to prioritized
-        }
-        if (targetStatus === 'parked') {
-          return 'parked'
-        }
-        return null
-        
-      default:
-        return null
+        if (targetStatus === 'rated') return 'rated'
+        if (targetStatus === 'parked') return 'parked'
+        if (targetStatus === 'unrated') return 'unrated'
+        break
     }
+    
+    console.log('❌ No valid transition found')
+    return null
   }
 
-  async updateTaskStatus(taskId, newStatus) {
-    // Store undo data BEFORE making any changes that might clear this.draggedTask
-    const undoData = this.draggedTask ? {
-      taskId: this.draggedTask.taskId,
-      previousStatus: this.draggedTask.currentStatus,
-      newStatus: newStatus
-    } : null
-
-    // Store draggedTask data before async operation since it might be cleared
-    const taskElement = this.draggedTask ? this.draggedTask.element : null
-    const currentStatus = this.draggedTask ? this.draggedTask.currentStatus : null
-
+  async updateTaskStatus(taskId, newStatus, targetStatus) {
+    console.log(`🔄 Updating task ${taskId} status to ${newStatus}`)
+    
     try {
       const response = await fetch(`/tasks/${taskId}`, {
         method: 'PATCH',
@@ -263,78 +327,44 @@ export default class extends Controller {
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
-          console.log('Task status updated successfully')
+          console.log('✅ Task status updated successfully')
           
-          // Store undo action using the data we saved earlier
-          if (undoData) {
-            this.storeUndoActionWithData(undoData)
-          }
-          
-          // Move task card to correct section without page reload
-          this.moveTaskCardToSection(taskElement, newStatus, currentStatus)
+          // Move task card to correct section
+          this.moveTaskCardToSection(this.draggedTask.element, newStatus, this.draggedTask.currentStatus)
           
           // Update section counters
           this.updateSectionCounters()
+          
+          console.log(`🎉 Task moved from ${this.draggedTask.currentStatus} to ${newStatus}`)
+        } else {
+          console.error('❌ Server returned success: false')
         }
+      } else {
+        console.error('❌ HTTP error:', response.status, response.statusText)
       }
     } catch (error) {
-      console.error('Error updating task status:', error)
+      console.error('❌ Network error updating task status:', error)
     }
   }
 
   hasAllRatings(taskCard) {
-    // Check if task has all required ratings
-    const energySelect = taskCard.querySelector('select[name="task[energy]"]')
-    const simplicitySelect = taskCard.querySelector('select[name="task[simplicity]"]')
-    const impactSelect = taskCard.querySelector('select[name="task[impact]"]')
-    
-    console.log('=== RATING CHECK DEBUG ===')
-    console.log('Energy select found:', !!energySelect, energySelect?.value)
-    console.log('Simplicity select found:', !!simplicitySelect, simplicitySelect?.value)
-    console.log('Impact select found:', !!impactSelect, impactSelect?.value)
-    
-    if (!energySelect || !simplicitySelect || !impactSelect) {
-      // If selects don't exist, check if task has score display (already rated)
-      const scoreDisplay = taskCard.querySelector('.task-score-badge') || taskCard.querySelector('.score-container')
-      if (scoreDisplay) {
-        console.log('No selects found but score display exists - already rated: TRUE')
-        return true
-      } else {
-        console.log('No selects and no score display - not rated: FALSE')
-        return false
+    try {
+      // Check if task has all required ratings
+      const energySelect = taskCard.querySelector('select[name="task[energy]"]')
+      const simplicitySelect = taskCard.querySelector('select[name="task[simplicity]"]')
+      const impactSelect = taskCard.querySelector('select[name="task[impact]"]')
+      
+      if (!energySelect || !simplicitySelect || !impactSelect) {
+        // If selects don't exist, check if task has score display (already rated)
+        const scoreDisplay = taskCard.querySelector('.task-score-badge') || taskCard.querySelector('.score-container')
+        return !!scoreDisplay
       }
+      
+      return !!(energySelect.value && simplicitySelect.value && impactSelect.value)
+    } catch (error) {
+      console.warn('Error checking ratings:', error)
+      return false
     }
-    
-    const hasRatings = !!(energySelect.value && simplicitySelect.value && impactSelect.value)
-    console.log('All rating values present:', hasRatings)
-    console.log('==========================')
-    
-    return hasRatings
-  }
-
-  highlightMissingRatings() {
-    const taskCard = this.draggedTask.element
-    const energySelect = taskCard.querySelector('select[name="task[energy]"]')
-    const simplicitySelect = taskCard.querySelector('select[name="task[simplicity]"]')
-    const impactSelect = taskCard.querySelector('select[name="task[impact]"]')
-    
-    // Add red border to fields that are missing values
-    if (energySelect && !energySelect.value) {
-      energySelect.style.borderColor = '#ef4444'
-    }
-    if (simplicitySelect && !simplicitySelect.value) {
-      simplicitySelect.style.borderColor = '#ef4444'
-    }
-    if (impactSelect && !impactSelect.value) {
-      impactSelect.style.borderColor = '#ef4444'
-    }
-    
-    // Remove red border after 3 seconds
-    setTimeout(() => {
-      if (energySelect) energySelect.style.borderColor = ''
-      if (simplicitySelect) simplicitySelect.style.borderColor = ''
-      if (impactSelect) impactSelect.style.borderColor = ''
-    }, 3000)
   }
 
   highlightValidDropZones() {
@@ -349,38 +379,14 @@ export default class extends Controller {
     if (!this.draggedTask) return false
     
     const targetStatus = dropZone.dataset.status
-    const { currentStatus, hasRatings } = this.draggedTask
+    const { currentStatus } = this.draggedTask
 
     // Don't highlight current section
     if (currentStatus === targetStatus) return false
 
-    // Check if drop would be valid using same logic as getNewStatusForDrop
-    switch (currentStatus) {
-      case 'unrated':
-        // Filter tasks (unrated) can go to parked, or to priorities if they have ratings
-        return targetStatus === 'parked' || (targetStatus === 'rated' && hasRatings)
-        
-      case 'rated':
-        // Rated tasks (including prioritized) can go to prioritized, parked, or completed
-        return targetStatus === 'rated' || targetStatus === 'parked' || targetStatus === 'completed'
-        
-      case 'parked':
-        // Parked tasks behavior depends on if they have ratings
-        if (hasRatings) {
-          // Parked (rated) can go to prioritized or completed
-          return targetStatus === 'rated' || targetStatus === 'completed'
-        } else {
-          // Parked (unrated) can only go to completed
-          return targetStatus === 'completed'
-        }
-        
-      case 'completed':
-        // Completed tasks can go back to prioritized or parked (undo mistakes)
-        return targetStatus === 'rated' || targetStatus === 'parked'
-        
-      default:
-        return false
-    }
+    // For simplicity, allow drops to most sections
+    // The actual validation happens in getNewStatusForDrop
+    return true
   }
 
   removeAllDropZoneHighlights() {
@@ -390,72 +396,22 @@ export default class extends Controller {
   }
 
   showInvalidDropFeedback() {
-    // Add shake animation to the dragged task
-    if (this.draggedTask && this.draggedTask.element) {
-      this.draggedTask.element.style.animation = 'shake 0.5s ease-in-out'
-      setTimeout(() => {
-        if (this.draggedTask && this.draggedTask.element) {
-          this.draggedTask.element.style.animation = ''
-        }
-      }, 500)
-    }
-  }
-
-  storeUndoActionWithData(undoData) {
-    if (!window.UndoManager) {
-      window.UndoManager = { actions: [], maxActions: 10 }
-    }
-    
-    window.UndoManager.actions.push({
-      action: 'drag_drop',
-      data: undoData,
-      timestamp: Date.now()
-    })
-    
-    if (window.UndoManager.actions.length > window.UndoManager.maxActions) {
-      window.UndoManager.actions.shift()
-    }
-  }
-
-  // Legacy method - kept for compatibility but with null safety
-  storeUndoAction(newStatus) {
-    if (!this.draggedTask) {
-      console.warn('Cannot store undo action: draggedTask is null')
-      return
-    }
-    
-    this.storeUndoActionWithData({
-      taskId: this.draggedTask.taskId,
-      previousStatus: this.draggedTask.currentStatus,
-      newStatus: newStatus
-    })
-  }
-
-  // Called when new tasks are added dynamically
-  refreshDragAndDrop() {
-    console.log('Refreshing drag and drop for new tasks')
-    this.setupDragAndDrop()
-  }
-  
-  // Method to set up drag and drop for a specific new task card
-  setupNewTaskCard(taskCard) {
-    if (taskCard) {
-      taskCard.draggable = true
-      taskCard.addEventListener('dragstart', this.handleDragStart.bind(this))
-      taskCard.addEventListener('dragend', this.handleDragEnd.bind(this))
-    }
+    console.log('⚠️ Showing invalid drop feedback')
+    // Could add visual feedback here
   }
 
   moveTaskCardToSection(taskCard, newStatus, currentStatus) {
     if (!taskCard) {
-      console.error('Task card is null, cannot move')
+      console.error('❌ Task card is null, cannot move')
       return
     }
+
+    console.log(`🚚 Moving task card from ${currentStatus} to ${newStatus}`)
 
     // Find the target section
     const targetSection = document.querySelector(`[data-status="${newStatus}"] .task-cards-container`)
     if (!targetSection) {
-      console.error('Target section not found for status:', newStatus)
+      console.error('❌ Target section not found for status:', newStatus)
       return
     }
 
@@ -480,7 +436,7 @@ export default class extends Controller {
       }
     }
 
-    console.log(`Task moved from ${currentStatus} to ${newStatus}`)
+    console.log(`✅ Task moved successfully from ${currentStatus} to ${newStatus}`)
   }
 
   updateSectionCounters() {
@@ -493,13 +449,13 @@ export default class extends Controller {
       
       if (container && counter) {
         const count = container.children.length
-        const label = this.getCounterLabel(status, count)
+        const label = this.getCounterLabel(status)
         counter.textContent = `${count} ${label}`
       }
     })
   }
 
-  getCounterLabel(status, count) {
+  getCounterLabel(status) {
     switch (status) {
       case 'unrated': return 'unfiltered'
       case 'rated': return 'prioritized'
@@ -507,5 +463,11 @@ export default class extends Controller {
       case 'completed': return 'completed'
       default: return ''
     }
+  }
+
+  // Called when new tasks are added dynamically
+  refreshDragAndDrop() {
+    console.log('🔄 Refreshing drag and drop for new tasks')
+    this.setupDragAndDrop()
   }
 }
