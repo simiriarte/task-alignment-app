@@ -86,9 +86,13 @@ class TasksController < ApplicationController
       respond_to do |format|
         format.html { redirect_to @task, notice: "Task was successfully updated." }
         format.json { 
+          # Include updated task HTML for instant DOM updates
+          task_html = render_to_string(partial: "task_card", locals: { task: @task }, formats: [:html])
+          
           render json: { 
             success: true, 
             task: @task,
+            task_html: task_html,
             counts: updated_counts
           } 
         }

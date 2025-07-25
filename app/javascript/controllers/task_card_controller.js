@@ -283,21 +283,63 @@ export default class extends Controller {
             window.DashboardCounters.updateCounters(data.counts)
           }
           
-          // If status changed to 'rated', 'parked', or 'unrated', remove the card from the current section
+          // If status changed, move task to appropriate section
           if (status === 'rated' || status === 'parked' || status === 'unrated') {
-            this.fadeOutAndRemove()
-            
-            // For unrated tasks, reload the page to show task in filter section
-            if (status === 'unrated') {
-              setTimeout(() => {
-                window.location.reload()
-              }, 500)
-            }
+            this.moveTaskToSection(status, data.task_html)
           }
         }
       }
     } catch (error) {
       console.error("Error updating task status:", error)
+    }
+  }
+
+  async updateTaskWithRatings(status, energy, simplicity, impact) {
+    try {
+      const taskId = this.element.dataset.taskId
+      const formData = new FormData()
+      
+      // Include status and all rating values
+      formData.append('task[status]', status)
+      formData.append('task[energy]', energy)
+      formData.append('task[simplicity]', simplicity)
+      formData.append('task[impact]', impact)
+      
+      console.log(`🎯 Updating task ${taskId} with ratings: E=${energy}, S=${simplicity}, I=${impact}, Status=${status}`)
+      
+      const response = await fetch(`/tasks/${taskId}`, {
+        method: 'PATCH',
+        body: formData,
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          console.log('✅ Task updated with ratings successfully')
+          this.showSaveIndicator()
+          
+          // Update all counters if counts are provided (status may have changed)
+          if (data.counts && window.DashboardCounters) {
+            window.DashboardCounters.updateCounters(data.counts)
+          }
+          
+          // Move task to appropriate section with updated HTML
+          if (status === 'rated' || status === 'parked' || status === 'unrated') {
+            this.moveTaskToSection(status, data.task_html)
+          }
+        } else {
+          console.error('❌ Server returned success: false')
+        }
+      } else {
+        console.error('❌ HTTP error:', response.status, response.statusText)
+      }
+    } catch (error) {
+      console.error("❌ Error updating task with ratings:", error)
     }
   }
   
@@ -385,9 +427,20 @@ export default class extends Controller {
         parentSection: this.element.closest('.dashboard-section')
       })
       
-      // Calculate the score and update status
-      const score = this.calculateScore()
-      this.updateTaskStatus('rated')
+      // Get the rating values from the form
+      const energySelect = this.element.querySelector('select[name="task[energy]"]')
+      const simplicitySelect = this.element.querySelector('select[name="task[simplicity]"]')
+      const impactSelect = this.element.querySelector('select[name="task[impact]"]')
+      
+      const energy = parseFloat(energySelect.value) || 0
+      const simplicity = parseFloat(simplicitySelect.value) || 0
+      const impact = parseFloat(impactSelect.value) || 0
+      
+      // Calculate the score
+      const score = energy + simplicity + impact
+      
+      // Update task with status AND rating values
+      this.updateTaskWithRatings('rated', energy, simplicity, impact)
     } else {
       this.highlightMissingRatings()
     }
@@ -1202,22 +1255,44 @@ export default class extends Controller {
   }
 
   storeUndoAction(action, data) {
-    if (!window.UndoManager) {
-      window.UndoManager = {
-        actions: [],
-        maxActions: 10
+    // Use the global UndoManager if available
+    if (window.UndoManager && typeof window.UndoManager.addAction === 'function') {
+      // Use the proper UndoManager controller
+      window.UndoManager.addAction({
+        type: 'task_status_change',
+        data: {
+          taskId: data.taskId,
+          previousStatus: data.previousStatus,
+          action: action // 'rate', 'park', etc.
+        }
+      })
+      console.log(`✅ Stored ${action} action in UndoManager`)
+    } else {
+      // Fallback: create simple actions array if UndoManager not available
+      if (!window.UndoManager) {
+        window.UndoManager = {
+          actions: [],
+          maxActions: 10
+        }
       }
-    }
-    
-    window.UndoManager.actions.push({
-      action: action,
-      data: data,
-      timestamp: Date.now()
-    })
-    
-    // Keep only the last 10 actions
-    if (window.UndoManager.actions.length > window.UndoManager.maxActions) {
-      window.UndoManager.actions.shift()
+      
+      // Ensure actions array exists
+      if (!window.UndoManager.actions) {
+        window.UndoManager.actions = []
+      }
+      
+      window.UndoManager.actions.push({
+        action: action,
+        data: data,
+        timestamp: Date.now()
+      })
+      
+      // Keep only the last 10 actions
+      if (window.UndoManager.actions.length > window.UndoManager.maxActions) {
+        window.UndoManager.actions.shift()
+      }
+      
+      console.log(`⚠️ Stored ${action} action in fallback UndoManager`)
     }
   }
 
@@ -1936,6 +2011,109 @@ Update status report"
     } catch (error) {
       console.error('Error creating subtasks:', error)
       alert('Failed to create subtasks')
+    }
+  }
+
+  moveTaskToSection(newStatus, updatedTaskHtml) {
+    console.log(`🚚 Moving task to ${newStatus} section`)
+    
+    const currentStatus = this.element.dataset.status
+    
+    // Find the target section
+    const targetSection = document.querySelector(`[data-status="${newStatus}"] .task-cards-container`)
+    if (!targetSection) {
+      console.error(`❌ Target section not found for status: ${newStatus}`)
+      // Fallback to fade out and remove
+      this.fadeOutAndRemove()
+      return
+    }
+
+    // Update the task's data-status attribute  
+    this.element.dataset.status = newStatus
+    
+    // Hide empty state in target section if it exists
+    const targetEmptyState = targetSection.parentElement.querySelector('.section-empty-state')
+    if (targetEmptyState) {
+      targetEmptyState.style.display = 'none'
+    }
+
+    // If we have updated HTML from server, use it
+    if (updatedTaskHtml) {
+      console.log('📦 Using updated HTML from server')
+      
+      // Create a temporary container to parse the HTML
+      const tempDiv = document.createElement('div')
+      tempDiv.innerHTML = updatedTaskHtml
+      const newTaskElement = tempDiv.querySelector('.task-card-wrapper')
+      
+      if (newTaskElement) {
+        // Add the new element to target section
+        targetSection.appendChild(newTaskElement)
+        
+        // Remove the old element with fade out
+        this.fadeOutWithoutReload()
+      } else {
+        console.error('❌ Could not parse updated task HTML')
+        // Fallback to moving existing element
+        this.moveExistingElement(targetSection, currentStatus)
+      }
+    } else {
+      // Move the existing element
+      this.moveExistingElement(targetSection, currentStatus)
+    }
+    
+    // Check if source section is now empty and show empty state
+    this.checkSourceSectionEmpty(currentStatus)
+    
+    console.log(`✅ Task moved from ${currentStatus} to ${newStatus}`)
+  }
+
+  moveExistingElement(targetSection, currentStatus) {
+    console.log('📦 Moving existing element')
+    
+    // Get the wrapper element (which includes the task card)
+    const wrapper = this.element.closest('.task-card-wrapper')
+    const elementToMove = wrapper || this.element
+    
+    // Add to target section
+    targetSection.appendChild(elementToMove)
+  }
+
+  fadeOutWithoutReload() {
+    // Add fade out animation
+    this.element.style.transition = 'all 0.3s ease'
+    this.element.style.opacity = '0'
+    this.element.style.transform = 'translateX(20px)'
+    
+    // Remove element after animation
+    setTimeout(() => {
+      // Remove main task card
+      const wrapper = this.element.closest('.task-card-wrapper')
+      const elementToRemove = wrapper || this.element
+      
+      // Also remove the associated subtask area (if it exists)
+      const subtaskArea = elementToRemove.nextElementSibling
+      if (subtaskArea && subtaskArea.classList.contains('subtask-area')) {
+        subtaskArea.remove()
+      }
+      
+      // Remove the main task element
+      elementToRemove.remove()
+      
+      // Notify parent controller about task removal
+      this.notifyParentOfDeletion()
+      
+      // NO page reload - this is the key difference from fadeOutAndRemove
+    }, 300)
+  }
+
+  checkSourceSectionEmpty(currentStatus) {
+    const sourceSection = document.querySelector(`[data-status="${currentStatus}"] .task-cards-container`)
+    if (sourceSection && sourceSection.children.length === 0) {
+      const sourceEmptyState = sourceSection.parentElement.querySelector('.section-empty-state')
+      if (sourceEmptyState) {
+        sourceEmptyState.style.display = 'block'
+      }
     }
   }
 
