@@ -1322,27 +1322,38 @@ export default class extends Controller {
 
   // Subtask functionality
   addSubtask(event) {
+    console.log('🎯 Add subtask button clicked!')
     event.preventDefault()
     
     // If no subtask area exists, create it first
     if (!this.hasSubtaskContentTarget) {
+      console.log('📦 Creating subtask area...')
       this.createSubtaskArea()
     }
     
     const content = this.subtaskContentTarget
     const subtaskArea = content.closest('.subtask-area')
     
+    console.log('🔍 Subtask content target found:', !!content)
+    console.log('🔍 Subtask area found:', !!subtaskArea)
+    
     // Expand panel if not already expanded
     if (!content.classList.contains('expanded')) {
+      console.log('📖 Expanding subtask panel...')
       content.classList.add('expanded')
       subtaskArea.classList.add('expanded')
     }
     
     // Show the input field and focus it
     if (this.hasSubtaskInputContainerTarget && this.hasSubtaskInputTarget) {
+      console.log('⌨️ Showing input field and focusing...')
       this.subtaskInputContainerTarget.style.display = 'block'
       this.subtaskInputTarget.focus()
       this.subtaskInputTarget.value = ''
+    } else {
+      console.error('❌ Subtask input targets not found!')
+      console.log('Has input container:', this.hasSubtaskInputContainerTarget)
+      console.log('Has input:', this.hasSubtaskInputTarget)
     }
   }
 

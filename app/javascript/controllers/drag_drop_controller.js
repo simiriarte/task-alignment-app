@@ -24,9 +24,8 @@ export default class extends Controller {
     console.log(`🔧 Found ${taskCards.length} task cards to make draggable`)
     
     taskCards.forEach((card, index) => {
-      // Ensure draggable is set but with conditional cursor
+      // Make draggable but exclude buttons and inputs
       card.draggable = true
-      // Don't set cursor on the whole card - let CSS handle it contextually
       
       // Store bound handlers
       if (!card._mainDragStartHandler) {
@@ -41,6 +40,14 @@ export default class extends Controller {
       // Add fresh listeners
       card.addEventListener('dragstart', card._mainDragStartHandler)
       card.addEventListener('dragend', card._mainDragEndHandler)
+      
+      // Make buttons non-draggable to prevent conflicts
+      const buttons = card.querySelectorAll('button')
+      buttons.forEach(button => {
+        button.draggable = false
+        // Ensure buttons can receive click events
+        button.style.pointerEvents = 'auto'
+      })
       
       console.log(`✅ Task card ${index + 1} setup complete`)
     })
@@ -95,7 +102,8 @@ export default class extends Controller {
     if (interactiveElements.includes(event.target.tagName) || 
         event.target.closest('input, button, select, textarea, a')) {
       console.log('❌ Drag from interactive element, ignoring')
-      event.stopPropagation() // Stop the drag but don't prevent click
+      // DON'T call stopPropagation() - let the click event bubble normally
+      event.preventDefault() // Just prevent the drag, not the click
       return
     }
 
@@ -310,6 +318,9 @@ export default class extends Controller {
   async updateTaskStatus(taskId, newStatus, targetStatus) {
     console.log(`🔄 Updating task ${taskId} status to ${newStatus}`)
     
+    // Store reference to dragged task data before async operation
+    const draggedTaskData = this.draggedTask
+    
     try {
       const response = await fetch(`/tasks/${taskId}`, {
         method: 'PATCH',
@@ -329,13 +340,23 @@ export default class extends Controller {
         if (data.success) {
           console.log('✅ Task status updated successfully')
           
-          // Move task card to correct section
-          this.moveTaskCardToSection(this.draggedTask.element, newStatus, this.draggedTask.currentStatus)
+          // Use stored task data and updated HTML from server
+          if (draggedTaskData && draggedTaskData.element) {
+            if (data.task_html) {
+              // Use updated HTML from server for better consistency
+              this.replaceTaskWithUpdatedHTML(draggedTaskData.element, data.task_html, newStatus, draggedTaskData.currentStatus)
+            } else {
+              // Fallback to moving existing element
+              this.moveTaskCardToSection(draggedTaskData.element, newStatus, draggedTaskData.currentStatus)
+            }
+          } else {
+            console.error('❌ Dragged task data or element is null')
+          }
           
           // Update section counters
           this.updateSectionCounters()
           
-          console.log(`🎉 Task moved from ${this.draggedTask.currentStatus} to ${newStatus}`)
+          console.log(`🎉 Task moved from ${draggedTaskData?.currentStatus} to ${newStatus}`)
         } else {
           console.error('❌ Server returned success: false')
         }
@@ -398,6 +419,63 @@ export default class extends Controller {
   showInvalidDropFeedback() {
     console.log('⚠️ Showing invalid drop feedback')
     // Could add visual feedback here
+  }
+
+  replaceTaskWithUpdatedHTML(taskCard, updatedHTML, newStatus, currentStatus) {
+    if (!taskCard) {
+      console.error('❌ Task card is null, cannot replace')
+      return
+    }
+
+    console.log(`🔄 Replacing task card with updated HTML (${currentStatus} → ${newStatus})`)
+
+    // Find the target section
+    const targetSection = document.querySelector(`[data-status="${newStatus}"] .task-cards-container`)
+    if (!targetSection) {
+      console.error('❌ Target section not found for status:', newStatus)
+      return
+    }
+
+    // Hide empty state in target section if it exists
+    const targetEmptyState = targetSection.parentElement.querySelector('.section-empty-state')
+    if (targetEmptyState) {
+      targetEmptyState.style.display = 'none'
+    }
+
+    // Create a temporary container to parse the HTML
+    const tempContainer = document.createElement('div')
+    tempContainer.innerHTML = updatedHTML
+
+    // Get the new task card element
+    const newTaskCard = tempContainer.querySelector('.task-card')
+    if (!newTaskCard) {
+      console.error('❌ No task card found in updated HTML')
+      return
+    }
+
+    // Remove the old task card
+    taskCard.remove()
+
+    // Add the new task card to the target section
+    targetSection.appendChild(newTaskCard)
+
+    // Check if source section is now empty and show empty state
+    const sourceSection = document.querySelector(`[data-status="${currentStatus}"] .task-cards-container`)
+    if (sourceSection && sourceSection.children.length === 0) {
+      const sourceEmptyState = sourceSection.parentElement.querySelector('.section-empty-state')
+      if (sourceEmptyState) {
+        sourceEmptyState.style.display = 'block'
+      }
+    }
+
+    // Refresh drag and drop for the new element
+    const dragController = document.querySelector('[data-controller*="drag-drop"]')
+    if (dragController) {
+      const event = new CustomEvent('refreshDragDrop')
+      dragController.dispatchEvent(event)
+    }
+
+    console.log(`✅ Task replaced successfully from ${currentStatus} to ${newStatus}`)
   }
 
   moveTaskCardToSection(taskCard, newStatus, currentStatus) {

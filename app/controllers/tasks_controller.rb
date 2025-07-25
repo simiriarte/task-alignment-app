@@ -26,7 +26,7 @@ class TasksController < ApplicationController
       format.html
       format.json {
         render json: {
-          task: @task.as_json(only: [:id, :title, :status])
+          task: @task.as_json(only: [ :id, :title, :status ])
         }
       }
     end
@@ -82,19 +82,19 @@ class TasksController < ApplicationController
         parked_count: current_user.tasks.main_tasks.where(status: "parked").count,
         completed_count: current_user.tasks.main_tasks.where(status: "completed").count
       }
-      
+
       respond_to do |format|
         format.html { redirect_to @task, notice: "Task was successfully updated." }
-        format.json { 
+        format.json {
           # Include updated task HTML for instant DOM updates
-          task_html = render_to_string(partial: "task_card", locals: { task: @task }, formats: [:html])
-          
-          render json: { 
-            success: true, 
+          task_html = render_to_string(partial: "task_card", locals: { task: @task }, formats: [ :html ])
+
+          render json: {
+            success: true,
             task: @task,
             task_html: task_html,
             counts: updated_counts
-          } 
+          }
         }
       end
     else
@@ -112,7 +112,7 @@ class TasksController < ApplicationController
     task_html = render_to_string(partial: "task_card", locals: { task: @task }, formats: [ :html ])
 
     @task.destroy
-    
+
     # Calculate updated counts after deletion
     updated_counts = {
       unrated_count: current_user.tasks.main_tasks.where(status: "unrated").count,
@@ -120,7 +120,7 @@ class TasksController < ApplicationController
       parked_count: current_user.tasks.main_tasks.where(status: "parked").count,
       completed_count: current_user.tasks.main_tasks.where(status: "completed").count
     }
-    
+
     respond_to do |format|
       format.html { redirect_to tasks_url, notice: "Task was successfully deleted." }
       format.json {
@@ -208,7 +208,7 @@ class TasksController < ApplicationController
 
     if failed_tasks.empty?
       success_message = "Successfully created #{created_count} task#{'s' if created_count != 1}."
-      
+
       # Calculate updated counts after brain dump
       updated_counts = {
         unrated_count: current_user.tasks.main_tasks.where(status: "unrated").count,
@@ -216,7 +216,7 @@ class TasksController < ApplicationController
         parked_count: current_user.tasks.main_tasks.where(status: "parked").count,
         completed_count: current_user.tasks.main_tasks.where(status: "completed").count
       }
-      
+
       respond_to do |format|
         format.html { redirect_to tasks_url, notice: success_message }
         format.json {
@@ -254,16 +254,16 @@ class TasksController < ApplicationController
   # POST /tasks/:id/create_subtask
   def create_subtask
     @parent_task = current_user.tasks.find(params[:id])
-    
+
     # Validate subtask title
     if params[:title].blank?
       render json: { success: false, error: "Subtask title cannot be empty" }, status: :unprocessable_entity
       return
     end
-    
+
     # Get next position for ordering
     max_position = @parent_task.subtasks.maximum(:position) || -1
-    
+
     @subtask = current_user.tasks.build(
       title: params[:title],
       task_group_id: @parent_task.task_group_id,
@@ -273,12 +273,12 @@ class TasksController < ApplicationController
       cognitive_density: 0,
       estimated_hours: 0
     )
-    
+
     if @subtask.save
       render json: {
         success: true,
-        subtask: @subtask.as_json(only: [:id, :title, :is_subtask, :position]),
-        subtask_html: render_to_string(partial: "subtask_item", locals: { subtask: @subtask }, formats: [:html])
+        subtask: @subtask.as_json(only: [ :id, :title, :is_subtask, :position ]),
+        subtask_html: render_to_string(partial: "subtask_item", locals: { subtask: @subtask }, formats: [ :html ])
       }
     else
       render json: { success: false, errors: @subtask.errors.full_messages }, status: :unprocessable_entity
@@ -290,20 +290,20 @@ class TasksController < ApplicationController
   # PATCH /tasks/:id/toggle_subtask
   def toggle_subtask
     @subtask = current_user.tasks.find(params[:subtask_id])
-    
+
     unless @subtask.is_subtask
       render json: { success: false, error: "Task is not a subtask" }, status: :unprocessable_entity
       return
     end
-    
+
     # Toggle between unrated and completed for subtasks
     new_status = @subtask.status == "completed" ? "unrated" : "completed"
-    
+
     if @subtask.update(status: new_status)
       render json: {
         success: true,
         status: new_status,
-        subtask: @subtask.as_json(only: [:id, :title, :status])
+        subtask: @subtask.as_json(only: [ :id, :title, :status ])
       }
     else
       render json: { success: false, errors: @subtask.errors.full_messages }, status: :unprocessable_entity
@@ -360,15 +360,15 @@ class TasksController < ApplicationController
   # POST /tasks/:id/convert_to_main_task
   def convert_to_main_task
     @subtask = current_user.tasks.find(params[:id])
-    
+
     unless @subtask.is_subtask
       render json: { success: false, error: "Task is not a subtask" }, status: :unprocessable_entity
       return
     end
-    
+
     # Determine target status (default to "unrated" for Filter Tasks, or use specified status)
     target_status = params[:target_status] || "unrated"
-    
+
     # Convert subtask to main task
     @subtask.update!(
       is_subtask: false,
@@ -379,7 +379,7 @@ class TasksController < ApplicationController
       simplicity: nil,
       impact: nil
     )
-    
+
     # Calculate updated counts
     updated_counts = {
       unrated_count: current_user.tasks.main_tasks.where(status: "unrated").count,
@@ -387,18 +387,18 @@ class TasksController < ApplicationController
       parked_count: current_user.tasks.main_tasks.where(status: "parked").count,
       completed_count: current_user.tasks.main_tasks.where(status: "completed").count
     }
-    
+
     # Render the new task HTML
-    task_html = render_to_string(partial: "task_card", locals: { task: @subtask }, formats: [:html])
-    
+    task_html = render_to_string(partial: "task_card", locals: { task: @subtask }, formats: [ :html ])
+
     render json: {
       success: true,
       message: "Subtask successfully converted to main task",
-      task: @subtask.as_json(only: [:id, :title, :status]),
+      task: @subtask.as_json(only: [ :id, :title, :status ]),
       task_html: task_html,
       counts: updated_counts
     }
-    
+
   rescue ActiveRecord::RecordNotFound
     render json: { success: false, error: "Subtask not found" }, status: :not_found
   rescue => e

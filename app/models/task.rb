@@ -1,10 +1,10 @@
 class Task < ApplicationRecord
   belongs_to :user
-  
+
   # Associations for subtasks
-  has_many :subtasks, -> { where(is_subtask: true).order(:position) }, 
-           class_name: "Task", 
-           primary_key: :task_group_id, 
+  has_many :subtasks, -> { where(is_subtask: true).order(:position) },
+           class_name: "Task",
+           primary_key: :task_group_id,
            foreign_key: :task_group_id
 
   # Validations
@@ -40,7 +40,7 @@ class Task < ApplicationRecord
 
   # Instance methods
   def completed?
-    status == 'completed'
+    status == "completed"
   end
 
   def parent_task
@@ -51,7 +51,7 @@ class Task < ApplicationRecord
 
 
   private
-  
+
   def set_task_group_id
     self.task_group_id = SecureRandom.uuid
   end
