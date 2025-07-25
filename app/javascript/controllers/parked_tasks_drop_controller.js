@@ -120,8 +120,7 @@ export default class extends Controller {
         // Check if parent task has remaining subtasks
         this.checkParentTaskSubtasks(dragData.parentTaskId)
         
-        // Show success message
-        this.showSuccess(`Moved "${dragData.title}" to Parked Tasks`)
+        // Success - no notification message needed
         
       } else {
         throw new Error(data.error || 'Failed to convert subtask')
