@@ -1550,6 +1550,20 @@ export default class extends Controller {
       // If no existing subtasks, just append after input container
       this.subtaskListTarget.appendChild(subtaskItem)
     }
+    
+    // CRITICAL: Force Stimulus to connect to the new drag handle element
+    // This ensures the subtask-drag controller is properly initialized
+    setTimeout(() => {
+      const dragHandle = subtaskItem.querySelector('[data-controller="subtask-drag"]')
+      if (dragHandle) {
+        // Trigger Stimulus to connect to this element
+        const event = new CustomEvent('stimulus:connect', { bubbles: true })
+        dragHandle.dispatchEvent(event)
+        
+        // Also dispatch a turbo event as a fallback
+        document.documentElement.dispatchEvent(new CustomEvent('turbo:render', { bubbles: true }))
+      }
+    }, 0)
   }
 
   toggleSubtasks(event) {

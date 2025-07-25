@@ -24,8 +24,8 @@ export default class extends Controller {
     console.log(`🔧 Found ${taskCards.length} task cards to make draggable`)
     
     taskCards.forEach((card, index) => {
-      // Make draggable but exclude buttons and inputs
-      card.draggable = true
+      // The task cards already have draggable="true" in the HTML, so we don't need to set it
+      // This prevents any conflicts with the HTML attribute
       
       // Store bound handlers
       if (!card._mainDragStartHandler) {
@@ -41,12 +41,18 @@ export default class extends Controller {
       card.addEventListener('dragstart', card._mainDragStartHandler)
       card.addEventListener('dragend', card._mainDragEndHandler)
       
-      // Make buttons non-draggable to prevent conflicts
-      const buttons = card.querySelectorAll('button')
-      buttons.forEach(button => {
-        button.draggable = false
-        // Ensure buttons can receive click events
-        button.style.pointerEvents = 'auto'
+      // Make interactive elements non-draggable to prevent conflicts
+      const interactiveElements = card.querySelectorAll('button, input, select, textarea, a, .subtask-drag-handle')
+      interactiveElements.forEach(element => {
+        element.draggable = false
+        // Ensure elements can receive click events
+        element.style.pointerEvents = 'auto'
+      })
+      
+      // Special handling for subtask drag handles - they should remain draggable
+      const subtaskHandles = card.querySelectorAll('.subtask-drag-handle')
+      subtaskHandles.forEach(handle => {
+        handle.draggable = true
       })
       
       console.log(`✅ Task card ${index + 1} setup complete`)
@@ -85,15 +91,16 @@ export default class extends Controller {
   handleDragStart(event) {
     console.log('🚀 Main task drag start triggered')
     
+    // CRITICAL: Check if drag originated from a subtask drag handle FIRST
+    if (event.target.closest('.subtask-drag-handle') || event.target.classList.contains('subtask-drag-handle')) {
+      console.log('❌ Drag from subtask handle, ignoring main task drag')
+      // Don't process this as a main task drag
+      return
+    }
+    
     const taskCard = event.target.closest('.task-card')
     if (!taskCard) {
       console.log('❌ No task card found')
-      return
-    }
-
-    // CRITICAL: Check if drag originated from a subtask drag handle
-    if (event.target.closest('.subtask-drag-handle')) {
-      console.log('❌ Drag from subtask handle, ignoring main task drag')
       return
     }
 
@@ -102,8 +109,7 @@ export default class extends Controller {
     if (interactiveElements.includes(event.target.tagName) || 
         event.target.closest('input, button, select, textarea, a')) {
       console.log('❌ Drag from interactive element, ignoring')
-      // DON'T call stopPropagation() - let the click event bubble normally
-      event.preventDefault() // Just prevent the drag, not the click
+      event.preventDefault() // Prevent the drag
       return
     }
 
@@ -266,6 +272,10 @@ export default class extends Controller {
     const newStatus = this.getNewStatusForDrop(targetStatus)
     if (!newStatus) {
       console.log('❌ Invalid drop target')
+      // Special message for rated tasks trying to go to unrated
+      if (targetStatus === 'unrated' && this.draggedTask.hasRatings) {
+        console.log('⚠️ Rated tasks cannot be moved back to Filter Tasks')
+      }
       this.showInvalidDropFeedback()
       return
     }
@@ -285,6 +295,12 @@ export default class extends Controller {
     console.log('From:', currentStatus, '→ To:', targetStatus)
     console.log('Has Ratings:', hasRatings)
 
+    // CRITICAL: Prevent any task with ratings from going back to unrated
+    if (targetStatus === 'unrated' && hasRatings) {
+      console.log('❌ Cannot move rated task back to unrated/filtered section')
+      return null
+    }
+
     switch (currentStatus) {
       case 'unrated':
         if (targetStatus === 'parked') return 'parked'
@@ -295,19 +311,19 @@ export default class extends Controller {
       case 'rated':
         if (targetStatus === 'parked') return 'parked'
         if (targetStatus === 'completed') return 'completed'
-        if (targetStatus === 'unrated') return 'unrated'
+        // Removed: if (targetStatus === 'unrated') return 'unrated'
         break
         
       case 'parked':
         if (targetStatus === 'rated' && hasRatings) return 'rated'
         if (targetStatus === 'completed') return 'completed'
-        if (targetStatus === 'unrated') return 'unrated'
+        if (targetStatus === 'unrated' && !hasRatings) return 'unrated' // Only if no ratings
         break
         
       case 'completed':
         if (targetStatus === 'rated') return 'rated'
         if (targetStatus === 'parked') return 'parked'
-        if (targetStatus === 'unrated') return 'unrated'
+        if (targetStatus === 'unrated' && !hasRatings) return 'unrated' // Only if no ratings
         break
     }
     
@@ -340,14 +356,23 @@ export default class extends Controller {
         if (data.success) {
           console.log('✅ Task status updated successfully')
           
-          // Use stored task data and updated HTML from server
+          // Use stored task data
           if (draggedTaskData && draggedTaskData.element) {
-            if (data.task_html) {
-              // Use updated HTML from server for better consistency
+            // PREFER moving existing element to preserve event listeners and Stimulus controllers
+            // Only use server HTML if explicitly needed for data consistency
+            const shouldUseServerHTML = false // We'll keep the existing DOM for better functionality
+            
+            if (shouldUseServerHTML && data.task_html) {
+              // Use updated HTML from server (this will break event listeners)
               this.replaceTaskWithUpdatedHTML(draggedTaskData.element, data.task_html, newStatus, draggedTaskData.currentStatus)
             } else {
-              // Fallback to moving existing element
+              // Move existing element - this preserves all functionality
               this.moveTaskCardToSection(draggedTaskData.element, newStatus, draggedTaskData.currentStatus)
+              
+              // Update any status-dependent attributes or classes if needed
+              if (data.task) {
+                this.updateTaskCardData(draggedTaskData.element, data.task)
+              }
             }
           } else {
             console.error('❌ Dragged task data or element is null')
@@ -400,12 +425,15 @@ export default class extends Controller {
     if (!this.draggedTask) return false
     
     const targetStatus = dropZone.dataset.status
-    const { currentStatus } = this.draggedTask
+    const { currentStatus, hasRatings } = this.draggedTask
 
     // Don't highlight current section
     if (currentStatus === targetStatus) return false
 
-    // For simplicity, allow drops to most sections
+    // CRITICAL: Don't highlight unrated section for tasks with ratings
+    if (targetStatus === 'unrated' && hasRatings) return false
+
+    // For other cases, allow highlighting
     // The actual validation happens in getNewStatusForDrop
     return true
   }
@@ -453,11 +481,33 @@ export default class extends Controller {
       return
     }
 
-    // Remove the old task card
-    taskCard.remove()
+    // Get the parent wrapper that contains both task card and its wrapper
+    const taskCardWrapper = taskCard.closest('.task-card-wrapper')
+    
+    // Remove the old task card wrapper (which includes the task card)
+    if (taskCardWrapper) {
+      taskCardWrapper.remove()
+    } else {
+      taskCard.remove()
+    }
 
-    // Add the new task card to the target section
-    targetSection.appendChild(newTaskCard)
+    // Parse the new HTML to get the complete structure
+    const tempWrapper = document.createElement('div')
+    tempWrapper.innerHTML = updatedHTML
+    
+    // Get the task-card-wrapper from the parsed HTML
+    const newTaskCardWrapper = tempWrapper.querySelector('.task-card-wrapper')
+    const newTaskCardOnly = tempWrapper.querySelector('.task-card')
+    
+    // Append the appropriate element (wrapper if available, card otherwise)
+    if (newTaskCardWrapper) {
+      targetSection.appendChild(newTaskCardWrapper)
+    } else if (newTaskCardOnly) {
+      targetSection.appendChild(newTaskCardOnly)
+    } else {
+      console.error('❌ No task card or wrapper found in updated HTML')
+      return
+    }
 
     // Check if source section is now empty and show empty state
     const sourceSection = document.querySelector(`[data-status="${currentStatus}"] .task-cards-container`)
@@ -467,6 +517,24 @@ export default class extends Controller {
         sourceEmptyState.style.display = 'block'
       }
     }
+
+    // CRITICAL: Force Stimulus to reconnect controllers on the new elements
+    // This ensures task-card controller and all nested controllers are properly initialized
+    setTimeout(() => {
+      const addedElement = newTaskCardWrapper || newTaskCardOnly
+      if (addedElement) {
+        // Use MutationObserver approach to trigger Stimulus
+        const observer = new MutationObserver(() => {
+          observer.disconnect()
+        })
+        
+        // Trigger a mutation to let Stimulus know about the new element
+        observer.observe(addedElement.parentElement, { childList: true })
+        
+        // Also dispatch turbo:render event which Stimulus listens to
+        document.documentElement.dispatchEvent(new CustomEvent('turbo:render', { bubbles: true }))
+      }
+    }, 0) // Use setTimeout to ensure DOM is ready
 
     // Refresh drag and drop for the new element
     const dragController = document.querySelector('[data-controller*="drag-drop"]')
@@ -493,6 +561,10 @@ export default class extends Controller {
       return
     }
 
+    // Get the wrapper element (parent of task card) to move the entire structure
+    const taskCardWrapper = taskCard.closest('.task-card-wrapper')
+    const elementToMove = taskCardWrapper || taskCard
+
     // Update task card's data-status attribute
     taskCard.dataset.status = newStatus
 
@@ -502,8 +574,8 @@ export default class extends Controller {
       targetEmptyState.style.display = 'none'
     }
 
-    // Move the task card to the target section
-    targetSection.appendChild(taskCard)
+    // Move the entire task structure to the target section
+    targetSection.appendChild(elementToMove)
 
     // Check if source section is now empty and show empty state
     const sourceSection = document.querySelector(`[data-status="${currentStatus}"] .task-cards-container`)
@@ -513,6 +585,11 @@ export default class extends Controller {
         sourceEmptyState.style.display = 'block'
       }
     }
+
+    // Refresh drag and drop handlers for the moved element
+    setTimeout(() => {
+      this.refreshDragAndDrop()
+    }, 0)
 
     console.log(`✅ Task moved successfully from ${currentStatus} to ${newStatus}`)
   }
@@ -541,6 +618,25 @@ export default class extends Controller {
       case 'completed': return 'completed'
       default: return ''
     }
+  }
+
+  updateTaskCardData(taskCard, taskData) {
+    // Update data attributes that might have changed
+    if (taskData.status) {
+      taskCard.dataset.status = taskData.status
+    }
+    
+    // Update any visual indicators that depend on status
+    // For example, score display for rated tasks
+    if (taskData.score !== undefined) {
+      const scoreElement = taskCard.querySelector('.task-score-badge, .score-display')
+      if (scoreElement) {
+        scoreElement.textContent = taskData.score
+      }
+    }
+    
+    // Update any other relevant data attributes
+    console.log('📝 Updated task card data attributes')
   }
 
   // Called when new tasks are added dynamically
